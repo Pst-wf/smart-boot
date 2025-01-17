@@ -22,7 +22,7 @@ spring:
         min-idle: 1
       shutdown-timeout: 10000ms  # 关闭超时时间
     database: 7
-###### Xxl Job  ######
+###### Xxl Job ######
 xxl:
   logPath: F:\xxl_logs\job  # 日志输出地址
   admin:
