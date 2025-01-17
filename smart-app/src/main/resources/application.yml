@@ -7,10 +7,10 @@ server:
       charset: UTF-8
 spring:
   profiles:
-    active: demo
+    active: dev
     include: core,mybatis,druid,xxl,pool,camunda
   application:
-    name: smart-boot (demo)
+    name: smart-boot
 ## Xxl-Job开启状态
 job:
   openStatus: true
