@@ -36,7 +36,7 @@ public class XxlJobConfig {
     @Value("${xxl.job.executor.ip}")
     private String ip;
 
-    @Value("${xxl.job.executor.port}")
+    @Value("${xxl.executor.port}")
     private int port;
 
     @Value("${xxl.logPath}")

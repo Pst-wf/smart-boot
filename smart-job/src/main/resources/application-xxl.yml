@@ -23,7 +23,8 @@ xxl:
       ### 执行器日志保存天数 [选填] ：值大于3时生效，启用执行器Log文件定期清理功能，否则不生效；
       logRetentionDays: 30
       ### 执行器端口号 [选填]：小于等于0则自动获取；默认端口为9999，单机部署多个执行器时，注意要配置不同执行器端口；
-      port: 9999
+      ## （转移到基础配置文件中）
+#      port: 9999
     ## xxl-job, triggerpool max size
     triggerpool:
       fast:
