@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smart.system.dao.OssDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.smart.entity.system.OssEntity" id="ossMap">
+        <result property="id" column="id"/>
+        <result property="ossType" column="oss_type"/>
+        <result property="ossHost" column="oss_host"/>
+        <result property="accessKey" column="access_key"/>
+        <result property="accessSecret" column="access_secret"/>
+        <result property="bucket" column="bucket"/>
+        <result property="ossStatus" column="oss_status"/>
+        <result property="ossDir" column="oss_dir"/>
+        <result property="region" column="region"/>
+    </resultMap>
+    <update id="updateOssStatus">
+        UPDATE sys_oss
+        SET oss_status = #{ossStatus}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

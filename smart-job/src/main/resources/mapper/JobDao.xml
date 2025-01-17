@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smart.job.dao.JobDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.smart.entity.job.JobEntity" id="jobMap">
+        <result property="id" column="id"/>
+        <result property="jobGroup" column="job_group"/>
+        <result property="jobDesc" column="job_desc"/>
+        <result property="alarmEmail" column="alarm_email"/>
+        <result property="scheduleType" column="schedule_type"/>
+        <result property="scheduleConf" column="schedule_conf"/>
+        <result property="misfireStrategy" column="misfire_strategy"/>
+        <result property="executorRouteStrategy" column="executor_route_strategy"/>
+        <result property="executorHandler" column="executor_handler"/>
+        <result property="executorParam" column="executor_param"/>
+        <result property="executorBlockStrategy" column="executor_block_strategy"/>
+        <result property="executorTimeout" column="executor_timeout"/>
+        <result property="executorFailRetryCount" column="executor_fail_retry_count"/>
+        <result property="glueType" column="glue_type"/>
+        <result property="glueSource" column="glue_source"/>
+        <result property="glueRemark" column="glue_remark"/>
+        <result property="glueUpdateTime" column="glue_update_time"/>
+        <result property="childJobId" column="child_job_id"/>
+        <result property="triggerStatus" column="trigger_status"/>
+        <result property="triggerLastTime" column="trigger_last_time"/>
+        <result property="triggerNextTime" column="trigger_next_time"/>
+        <result property="isDeleted" column="is_deleted"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createUser" column="create_user"/>
+        <result property="createDept" column="create_dept"/>
+        <result property="createOrganization" column="create_organization"/>
+        <result property="createDate" column="create_date"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateDate" column="update_date"/>
+        <result property="remarks" column="remarks"/>
+    </resultMap>
+    <select id="scheduleJobQuery" resultType="com.smart.entity.job.JobEntity">
+        SELECT *
+        FROM sys_job AS t
+        WHERE t.trigger_status = 1
+          AND t.trigger_next_time <![CDATA[ <= ]]> #{maxNextTime}
+        ORDER BY id ASC
+        LIMIT #{pageSize}
+    </select>
+    <select id="findPage" resultType="com.smart.entity.job.JobEntity">
+        SELECT a.*, b.title AS 'groupName'
+        FROM sys_job a
+                 LEFT JOIN sys_job_group b ON a.job_group = b.id
+        <if test="ew.customSqlSegment != null and ew.customSqlSegment != ''">
+            ${ew.customSqlSegment}
+        </if>
+    </select>
+
+</mapper>

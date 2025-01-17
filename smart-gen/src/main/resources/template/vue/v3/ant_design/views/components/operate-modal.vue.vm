@@ -1,0 +1,304 @@
+<template>
+  <a-modal
+      :open="visible"
+      :title="disabled ? '查看' : form.id ? '编辑' : '新增'"
+      :maskClosable="true"
+      :width="960"
+      centered
+      @cancel="onClose"
+  >
+    <a-form ref="formRef" :labelCol="{ span: 4 }" :labelWrap="true" :model="form" :rules="rules" :disabled="disabled">
+#foreach($column in $formColumns)
+      <a-form-item label="${column.comments}" name="${column.attrName}">
+#if($column.components == "INPUT")
+        <a-input v-model:value="form.${column.attrName}" placeholder="请输入${column.comments}"/>
+#elseif($column.components == "TEXTAREA")
+        <a-textarea :auto-size="{ minRows: 4 }" v-model:value="form.${column.attrName}" placeholder="请输入${column.comments}"/>
+#elseif($column.components == "INPUT-NUMBER")
+        <a-input-number v-model:value="form.${column.attrName}" placeholder="请输入${column.comments}" style="width: 100%"/>
+#elseif($column.components == "SELECT")
+        <a-select
+            v-model:value="form.${column.attrName}"
+            placeholder="请选择${column.comments}"
+            :allowClear="true"
+            optionFilterProp="dictName"
+#if($column.dictCode)
+            :options="dictMap.${column.dictCode}"
+            :field-names="{ label: 'dictName', value: 'dictValue' }"
+#else
+            :options="[]"
+#end
+        />
+#elseif($column.components == "CASCADER")
+        <a-cascader
+#if($column.dictCode)
+            v-model:value="${column.attrName}Cascader"
+#else
+            v-model:value="form.${column.attrName}"
+#end
+            placeholder="请选择${column.comments}"
+            allowClear
+            change-on-select
+#if($column.dictCode)
+            :field-names="{ label: 'dictName', value: 'dictValue' }"
+            :options="dictMap.${column.dictCode}"
+            @change="(val) => {
+              form.${column.attrName} = val ? val[val.length - 1] : ''
+            }"
+#else
+            :options="[]"
+#end
+        />
+#elseif($column.components == "TREE-SELECT")
+        <a-tree-select
+            v-model:value="form.${column.attrName}"
+            placeholder="请选择${column.comments}"
+            :dropdown-style="{ maxHeight: '400px', overflow: 'auto' }"
+            show-search
+            allow-clear
+#if($column.dictCode)
+            tree-node-filter-prop="dictName"
+            :fieldNames="{label:'dictName', value:'dictValue'}"
+            :tree-data="dictMap.${column.dictCode}"
+#else
+            :tree-data="[]"
+#end
+        />
+#elseif($column.components == "CHECKBOX")
+        <a-checkbox-group v-model:value="${column.attrName}CheckBox"
+            @change="val => {
+              if (val) {
+                form.${column.attrName} = val.join(',');
+              }
+            }"
+        >
+#if($column.dictCode)
+          <a-checkbox v-for="item in dictMap.${column.dictCode}" :key="item.id" :value="item.dictValue">{{item.dictName}}</a-checkbox>
+#else
+          <a-checkbox value=""/>
+#end
+        </a-checkbox-group>
+#elseif($column.components == "RADIO")
+        <a-radio-group v-model:value="form.${column.attrName}">
+#if($column.dictCode)
+          <a-radio v-for="item in dictMap.${column.dictCode}" :key="item.id" :value="item.dictValue">{{item.dictName}}</a-radio>
+#else
+          <a-radio value=""/>
+#end
+        </a-radio-group>
+#elseif($column.components == "DATEPICKER")
+        <a-date-picker
+            v-model:value="form.${column.attrName}"
+            value-format="YYYY-MM-DD HH:mm:ss"
+            format="YYYY-MM-DD HH:mm:ss"
+            allowClear
+            placeholder="请选择${column.comments}"
+            style="width: 100%"
+        />
+#elseif($column.components == "TIMEPICKER")
+        <a-time-picker
+            v-model:value="form.${column.attrName}"
+            format="HH:mm:ss"
+            value-format="HH:mm:ss"
+            placeholder="请选择${column.comments}"
+            style="width: 100%"
+        />
+#elseif($column.components == "SWITCH")
+        <a-switch v-model:checked="form.${column.attrName}" checked-value="1" un-checked-value="0"/>
+#elseif($column.components == "FILE-UPLOAD")
+#foreach ($uploadColumn in $uploadColumns)
+#if($uploadColumn.columnName == $column.columnName)
+        <FileUpload v-model:file-list="form.${uploadColumn.attrName}" @file-change="ids=> form.${column.attrName} = ids"/>
+#end
+#end
+#elseif($column.components == "IMAGE-UPLOAD")
+        <ImageUpload v-model:file-list="form.${column.attrName}" />
+#elseif($column.components == "EDITOR")
+        <WangEditor v-model:model-value="form.${column.attrName}"/>
+#end
+      </a-form-item>
+#end
+    </a-form>
+    <template #footer>
+      <a-button style="margin-right: 8px" @click="onClose">取消</a-button>
+      <a-button v-if="!disabled" style="margin-right: 8px" type="primary" @click="submit()">提交</a-button>
+    </template>
+  </a-modal>
+</template>
+<script setup>
+  import {message} from 'ant-design-vue';
+  import _ from 'lodash';
+  import {reactive, ref, watch} from 'vue';
+  import {${classname}Api} from '/@/api/${apiPath}';
+  import {smartSentry} from '/@/lib/smart-sentry';
+  import {SmartLoading} from '/@/components/framework/smart-loading';
+  import {debounceAsync} from "/@/utils/debounce-util.js";
+#if($cascaderDictColumns.size() > 0 )
+  import {getAncestors} from "/@/utils/dict-util.js";
+#end
+#if($uploadColumns.size() > 0 )
+  import FileUpload from '/@/components/file-upload/index.vue';
+#end
+#if($imageUploadColumns.size() > 0 )
+  import ImageUpload from '/@/components/image-upload/index.vue';
+#end
+#if($hasEditor)
+  import WangEditor from '/@/components/framework/wangeditor/index.vue';
+#end
+
+#if($checkboxColumns.size() > 0)
+  /** 复选框字段特殊处理 */
+#foreach($column in $checkboxColumns)
+  const ${column.attrName}CheckBox = ref([]);
+#end
+#end
+#if($checkboxColumns.size() > 0)
+
+#end
+#if($cascaderDictColumns.size() > 0)
+/** 级联选择器字段特殊处理 */
+#foreach($column in $cascaderDictColumns)
+  const ${column.attrName}Cascader = ref([]);
+#end
+#end
+#if($cascaderDictColumns.size() > 0)
+
+#end
+  // ----------------------- 以下是字段定义 emits props ------------------------
+  const emit = defineEmits(['reloadList']);
+#if($dictCodes.length() > 0 )
+  const props = defineProps({
+    dictMap: {
+      type: Object,
+      default: () => {}
+    }
+  })
+#end
+  // ----------------------- 展开、隐藏编辑窗口 ------------------------
+  // 是否展示抽屉
+  const visible = ref(false);
+  // 是否可编辑
+  const disabled = ref(false);
+  // 打开表单弹窗
+  async function showDrawer(rowData, bool) {
+    disabled.value = bool
+    Object.assign(form, formDefault);
+    if (rowData && !_.isEmpty(rowData)) {
+      Object.assign(form, rowData);
+    }
+#foreach($column in $cascaderDictColumns)
+    if (form.${column.attrName}) {
+      ${column.attrName}Cascader.value = getAncestors(props.dictMap.${column.dictCode}, form.${column.attrName})
+    }
+#end
+#foreach($column in $checkboxColumns)
+    if (form.${column.attrName}) {
+      ${column.attrName}CheckBox.value = form.${column.attrName}.split(',');
+    }
+#end
+    visible.value = true;
+  }
+  function onClose() {
+    Object.assign(form, formDefault);
+    formRef.value.resetFields();
+    visible.value = false;
+  }
+
+  // ----------------------- form表单相关操作 ------------------------
+
+  const formRef = ref();
+  const formDefault = {
+    id: null,
+#foreach ($column in $formColumns)
+    ${column.attrName}: null#if($foreach.hasNext),
+#else
+#if($uploadColumns.size() == 0)
+
+#end
+#end
+#end#if($formColumns.size() > 0 && $uploadColumns.size() > 0),
+#end
+#foreach($uploadColumn in $uploadColumns)
+    ${uploadColumn.attrName}: null#if($foreach.hasNext),
+#else
+
+#end
+#end
+  };
+  let form = reactive({...formDefault});
+  const rules = {
+#foreach ($column in $validateColumns)
+    ${column.attrName}: [
+      {required: true, message: '${column.comments}不能为空'}
+    ]#if($foreach.hasNext),
+#else
+
+#end
+#end
+  };
+  function validateForm(formRef) {
+    return new Promise((resolve) => {
+      formRef
+          .validate()
+          .then(() => {
+            resolve(true);
+          })
+          .catch(() => {
+            resolve(false);
+          });
+    });
+  }
+  // 防抖
+  const submit = debounceAsync(() =>onSubmit(), 200, true);
+  const onSubmit = async () => {
+    let validateFormRes = await validateForm(formRef.value);
+    if (!validateFormRes) {
+      message.error('参数验证错误，请仔细填写表单数据!');
+      return;
+    }
+    SmartLoading.show();
+    try {
+      let params = _.cloneDeep(form);
+      if (params.id) {
+        await ${classname}Api.update${className}(params);
+      } else {
+        await ${classname}Api.add${className}(params);
+      }
+#set( $value = "params.id ? '修改' : '新增'")
+      message.success(`${${value}}成功`);
+      SmartLoading.hide();
+      onClose();
+      emit('reloadList');
+    } catch (error) {
+      smartSentry.captureError(error);
+    } finally {
+      SmartLoading.hide();
+    }
+  };
+  watch(
+      () => visible.value,
+      (val) => {
+        if (!val) {
+          formRef.value.resetFields();
+        }
+      },
+  );
+
+  // ----------------------- 以下是暴露的方法内容 ------------------------
+  defineExpose({
+    showDrawer,
+  });
+</script>
+<style lang="less" scoped>
+  .footer {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    border-top: 1px solid #e9e9e9;
+    padding: 10px 16px;
+    background: #fff;
+    text-align: left;
+    z-index: 1;
+  }
+</style>

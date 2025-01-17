@@ -1,0 +1,23 @@
+spring:
+  jackson:
+    serialization:
+      indent-output: true
+  servlet:
+    multipart:
+      max-file-size: -1
+      max-request-size: -1
+  cache:
+    type: redis
+    cache-names: user,dept,identity,scope,permission,dict,oss,config
+    redis:
+      time-to-live: 600000
+      key-prefix: 'Smart:'
+      use-key-prefix: true
+  web:
+    resources:
+      static-locations: classpath:/json/
+# token过期时间 10天
+token_expire: 864000000
+
+
+

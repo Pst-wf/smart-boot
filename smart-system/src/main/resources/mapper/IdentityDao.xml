@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smart.system.dao.IdentityDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.smart.entity.system.IdentityEntity" id="identityMap">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="roleId" column="role_id"/>
+        <result property="deptId" column="dept_id"/>
+        <result property="organizationId" column="organization_id"/>
+    </resultMap>
+    <select id="getInfo" resultType="com.smart.entity.system.IdentityEntity">
+        SELECT a.id              AS id,
+               a.user_id         AS userId,
+               a.role_id         AS roleId,
+               a.post_id         AS postId,
+               a.dept_id         AS deptId,
+               a.organization_id AS organizationId,
+               b.role_name       AS roleName,
+               e.post_name       AS postName,
+               c.dept_name       AS deptName,
+               d.dept_name       AS organizationName,
+               c.ancestors       AS deptAncestors
+        FROM sys_identity a
+                 LEFT JOIN sys_role b ON b.id = a.role_id
+                 LEFT JOIN sys_dept c ON c.id = a.dept_id
+                 LEFT JOIN sys_dept d ON d.id = a.organization_id
+                 LEFT JOIN sys_post e ON e.id = a.post_id
+        WHERE a.id = #{id}
+          AND a.is_deleted = '0'
+          AND b.is_deleted = '0'
+          AND c.is_deleted = '0'
+          AND d.is_deleted = '0'
+          AND e.is_deleted = '0'
+
+
+    </select>
+
+</mapper>

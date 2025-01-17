@@ -1,0 +1,15 @@
+package ${package}.service.${moduleName};
+
+import ${package}.mybatis.service.BaseService;
+import ${package}.entity.${moduleName}.${className}Entity;
+
+/**
+ * ${comments} Service
+ *
+ * @author wf
+ * @since ${datetime}
+ */
+public interface ${className}Service extends BaseService<${className}Entity> {
+
+}
+

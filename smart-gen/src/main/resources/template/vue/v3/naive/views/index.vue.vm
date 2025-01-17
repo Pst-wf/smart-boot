@@ -1,0 +1,333 @@
+<script setup lang="tsx">
+import { NButton, NPopconfirm#if($hasListImage || $listDictColumns.length() > 0 ), NSpace#end#if($listDictColumns.length() > 0), NTag #else #end} from 'naive-ui';
+#if($dictCodes.length() > 0 )
+import { ref } from 'vue';
+#end
+#if($hasListImage)
+import ImagePreview from '@/components/custom/image-preview.vue';
+#end
+import { ${classname}Page, delete${className}, export${className}, download${className}Template#if($uploadColumns.size() > 0), get${className}#end } from '@/service/api';
+import { useAppStore } from '@/store/modules/app';
+import { useTable, useTableOperate } from '@/hooks/common/table';
+#set( $t = '$t' )
+import { $t } from '@/locales';
+import { showButton } from '@/utils/buttons';
+import { alertSuccess } from '@/utils/message';
+import { exportFile } from '@/utils/exportFile';
+#if($dictCodes.length() > 0 )
+import { dict } from '@/utils/dict';
+import { flatArray } from '@/utils/common';
+#end
+import ${className}OperateModal from './modules/${vueFileName}-operate-modal.vue';
+import ${className}Search from './modules/${vueFileName}-search.vue';
+
+const appStore = useAppStore();
+
+/**
+ * 当前路由的按钮
+ */
+const showAdd = showButton('${classname}:add');
+const showUpdate = showButton('${classname}:update');
+const showDelete = showButton('${classname}:delete');
+const showExport = showButton('${classname}:export');
+const showImport = showButton('${classname}:import');
+
+#if($dictCodes.length() > 0 )
+/**
+ * 字典Map
+ */
+const dictMap = ref<Record<string, DictApi.Dict[]>>({});
+
+#end
+/**
+ * 列表配置
+ */
+const { columns, columnChecks, data, loading, getData, mobilePagination, searchParams, resetSearchParams, updateSort } = useTable({
+  // 数据接口
+  apiFn: ${classname}Page,
+  // 查询参数
+  apiParams: {
+    // 页数
+    current: 1,
+    // 条数
+    size: 10,
+    // 排序字段
+    sortField: null,
+    // 排序规则
+    sortOrder: null#if($queryColumns.size() > 0 || $betweenColumns.size() > 0 || $inColumns.size() > 0 || $notInColumns.size() > 0),
+#else
+
+#end
+    // 如果要在Form中使用searchParams，则需要定义以下属性，并且该值为null
+    // 该值不能未定义，否则Form中的属性将不起作用
+#set($check1 = $betweenColumns.size() > 0 || $inColumns.size() > 0 || $notInColumns.size() > 0)
+#set($check2 = $inColumns.size() > 0 || $notInColumns.size() > 0)
+#set($check3 = $notInColumns.size() > 0)
+#foreach ($column in $queryColumns)
+    // ${column.comments}
+    ${column.attrName}: null#if($foreach.hasNext),
+#end
+#end#if($queryColumns.size() > 0 && $check1),
+#else
+
+#end
+#foreach ($betweenColumn in $betweenColumns)
+    // ${betweenColumn.comments}
+    ${betweenColumn.attrName}: null#if($foreach.hasNext),
+#end
+#end#if($betweenColumns.size() > 0 && $check2),
+#else
+
+#end
+#foreach ($inColumn in $inColumns)
+    // ${inColumn.comments}
+    ${inColumn.attrName}: null#if($foreach.hasNext),
+#end
+#end#if($inColumns.size() > 0 && $check3),
+#else
+
+#end
+#foreach ($column in $notInColumns)
+    // ${notInColumn.comments}
+    ${notInColumn.attrName}: null#if($foreach.hasNext),
+#else
+
+#end
+#end
+  },
+  columns: () => [
+    {
+      type: 'selection',
+      align: 'center',
+      width: 48
+    },
+    {
+      key: 'index',
+      title: $t('common.index'),
+      width: 64,
+      align: 'center'
+    },
+#foreach ($column in $listColumns)
+#set( $isImage = $column.components == 'IMAGE-UPLOAD' )
+    {
+      key: '${column.attrName}',
+      title: $t('page.#if($hasMenu)${menu.routeName}.#end${classname}.${column.attrName}'),
+      align: 'center',
+      sorter: true#if($column.attrName == 'createUserName'),
+      sortIndex: 'createUser'
+#end
+#if($column.dictCode || $isImage),
+      render: row => {
+        if (row.${column.attrName} === null) {
+          return null;
+        }
+#if($column.dictCode && !$isImage)
+        const labels = flatArray(dictMap.value.${column.dictCode}).filter(
+            x => row.${column.attrName} && x.dictValue && row.${column.attrName}.includes(x.dictValue)
+        );
+        if (labels && labels.length > 0) {
+          return (
+                  <NSpace justify="center">
+                    {labels.map(item => {
+                      return <NTag type="primary">{item.dictName}</NTag>;
+                    })}
+                  </NSpace>
+          );
+        }
+#else
+        const arr = row.${column.attrName}.split(',');
+        if (arr && arr.length > 0) {
+          return <ImagePreview urls={arr} />;
+        }
+#end
+        return null;
+      }
+#else
+
+#end
+    },
+#end
+    {
+      key: 'operate',
+      title: $t('common.operate'),
+      align: 'center',
+      width: 200,
+      render: row => (
+          <div class="flex-center gap-8px">
+            <NButton type="primary" ghost size="small" onClick={() => view(row.id)}>
+              {$t('common.view')}
+            </NButton>
+            {showUpdate && (
+                <NButton type="success" ghost size="small" onClick={() => edit(row.id)}>
+                  {$t('common.edit')}
+                </NButton>
+            )}
+            {showDelete && (
+                <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
+                  {{
+                    default: () => $t('common.confirmDelete'),
+                    trigger: () => (
+                        <NButton type="error" ghost size="small">
+                          {$t('common.delete')}
+                        </NButton>
+                    )
+                  }}
+                </NPopconfirm>
+            )}
+          </div>
+      )
+    }
+  ],
+  // 是否显示分页总数量
+  showTotal: true
+});
+
+const {
+  // 弹窗显隐
+  visible,
+  // 操作类型
+  operateType,
+  // 表单数据
+  editingData,
+  // 执行新增
+  handleAdd,
+  // 执行查看
+  handleView,
+  // 执行编辑
+  handleEdit,
+  // 选中的行Keys
+  checkedRowKeys,
+  // 批量删除
+  onBatchDeleted,
+  // 删除
+  onDeleted
+} = useTableOperate(data, getData);
+
+/** 删除 */
+async function handleDelete(id?: string | null) {
+  if (id) {
+    const { error } = await delete${className}({ deleteIds: [id] });
+    if (!error) {
+      await onDeleted();
+    }
+  } else {
+    const { error } = await delete${className}({ deleteIds: checkedRowKeys.value });
+    if (!error) {
+      await onBatchDeleted();
+    }
+  }
+}
+
+/** 导出 */
+async function handleExport() {
+  let params = {};
+  Object.assign(params, searchParams);
+  if (checkedRowKeys.value.length > 0) {
+    params = { ...params, selectIds: checkedRowKeys.value };
+  }
+  const { error, data: blob, headers } = await export${className}(params);
+  if (!error) {
+    alertSuccess($t('common.operateSuccess'));
+    exportFile(blob, headers);
+  }
+}
+
+/** 下载导入模板 */
+async function handleDownloadTemplate() {
+  const { error, data: blob, headers } = await download${className}Template();
+  if (!error) {
+    alertSuccess($t('common.operateSuccess'));
+    exportFile(blob, headers);
+  }
+}
+
+/** 查看 */
+function view(id: string | null) {
+  handleView(id#if($uploadColumns.size() > 0), get${className}({ id })#end);
+}
+
+/**
+ * 编辑
+ */
+function edit(id: string | null) {
+  handleEdit(id#if($uploadColumns.size() > 0), get${className}({ id })#end);
+}
+
+#if($dictCodes.length() > 0 )
+/**
+ * 获取字典
+ */
+async function getDict() {
+  dictMap.value = await dict([${dictCodes}]);
+}
+
+#end
+/**
+ * 初始化执行
+ */
+function init() {
+#if($dictCodes.length() > 0 )
+  getDict();
+#end
+}
+init();
+</script>
+
+<template>
+  <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
+#if($queryDictColumns.length() > 0 )
+    <${className}Search
+      v-model:model="searchParams"
+      :dict-map="dictMap"
+      @reset="resetSearchParams(true)"
+      @search="getData"
+    />
+#else
+    <${className}Search v-model:model="searchParams" @reset="resetSearchParams(true)" @search="getData" />
+#end
+    <NCard :title="$t('page.#if($hasMenu)${menu.routeName}.#end${classname}.title')" :bordered="false" size="small" class="sm:flex-1-hidden card-wrapper">
+      <template #header-extra>
+        <TableHeaderOperation
+            v-model:columns="columnChecks"
+            :disabled-delete="checkedRowKeys.length === 0"
+            :loading="loading"
+            :hide-add="!showAdd"
+            :hide-delete="!showDelete"
+            :hide-export="!showExport"
+            :hide-import="!showImport"
+            import-url="/${moduleName}/${pathName}/import"
+            @add="handleAdd"
+            @delete="handleDelete"
+            @export-data="handleExport"
+            @download-template="handleDownloadTemplate"
+            @refresh="getData"
+        />
+      </template>
+      <NDataTable
+          v-model:checked-row-keys="checkedRowKeys"
+          :columns="columns"
+          :data="data"
+          size="small"
+          :flex-height="!appStore.isMobile"
+          :scroll-x="702"
+          :loading="loading"
+          remote
+          :row-key="row => row.id"
+          :pagination="mobilePagination"
+          class="sm:h-full"
+          @update:sorter="updateSort"
+      />
+      <${className}OperateModal
+          v-model:visible="visible"
+          :operate-type="operateType"
+          :row-data="editingData"
+#if($formDictColumns.length() > 0 )
+          :dict-map="dictMap"
+#end
+          @submitted="getData"
+      />
+    </NCard>
+  </div>
+</template>
+
+<style scoped></style>

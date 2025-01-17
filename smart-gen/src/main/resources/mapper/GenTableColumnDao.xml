@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smart.gen.dao.GenTableColumnDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.smart.entity.gen.GenTableColumnEntity" id="genTableColumnMap">
+        <result property="id" column="id"/>
+        <result property="tableName" column="table_name"/>
+        <result property="columnName" column="column_name"/>
+        <result property="columnSort" column="column_sort"/>
+        <result property="columnType" column="column_type"/>
+        <result property="columnLength" column="column_length"/>
+        <result property="comments" column="comments"/>
+        <result property="attrName" column="attr_name"/>
+        <result property="attrType" column="attr_type"/>
+        <result property="isPk" column="is_pk"/>
+        <result property="isNotNull" column="is_not_null"/>
+        <result property="isList" column="is_list"/>
+        <result property="isForm" column="is_form"/>
+        <result property="queryType" column="query_type"/>
+        <result property="components" column="components"/>
+        <result property="options" column="options"/>
+        <result property="dictCode" column="dict_code"/>
+        <result property="rowStyle" column="row_style"/>
+        <result property="sort" column="sort"/>
+    </resultMap>
+
+    <select id="findColumns" resultType="com.smart.entity.gen.GenTableColumnEntity">
+        SELECT column_name                      AS columnName,
+               ordinal_position                 AS columnSort,
+               IF(is_nullable = 'NO', '1', '0') AS isNotNull,
+               '1'                              AS isList,
+               '1'                              AS isForm,
+               data_type                        AS columnType,
+               character_maximum_length         AS columnLength,
+               column_comment                   AS comments,
+               IF(column_key = 'PRI', '1', '0') AS isPk
+        FROM information_schema.COLUMNS
+        WHERE table_name = #{tableName}
+          AND table_schema = (SELECT DATABASE())
+        ORDER BY ordinal_position
+    </select>
+
+</mapper>

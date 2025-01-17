@@ -1,0 +1,27 @@
+[
+  {
+    "documentType": "word",
+    "name": "文本文档",
+    "acceptType": [
+      "doc",
+      "docx",
+      "pdf"
+    ]
+  },
+  {
+    "documentType": "cell",
+    "name": "电子表格",
+    "acceptType": [
+      "xls",
+      "xlsx"
+    ]
+  },
+  {
+    "documentType": "slide",
+    "name": "演示文稿",
+    "acceptType": [
+      "ppt",
+      "pptx"
+    ]
+  }
+]

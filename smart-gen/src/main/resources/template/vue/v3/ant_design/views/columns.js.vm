@@ -1,0 +1,19 @@
+import { ref } from 'vue';
+export const columns = ref([
+#foreach ($column in $listColumns)
+    {
+        title: '${column.comments}',
+        dataIndex: '${column.attrName}',
+        sorter: true#if($column.attrName == 'createUserName'),
+        sortIndex: 'createUser'
+#else
+
+#end
+    },
+#end
+    {
+        title: '操作',
+        dataIndex: 'operate',
+        width: 150
+    }
+]);

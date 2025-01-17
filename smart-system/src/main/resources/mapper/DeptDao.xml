@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smart.system.dao.DeptDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.smart.entity.system.DeptEntity" id="deptMap">
+        <result property="id" column="id"/>
+        <result property="deptCode" column="dept_code"/>
+        <result property="parentId" column="parent_id"/>
+        <result property="ancestors" column="ancestors"/>
+        <result property="deptType" column="dept_type"/>
+        <result property="deptName" column="dept_name"/>
+        <result property="sort" column="sort"/>
+        <result property="status" column="status"/>
+        <result property="isDeleted" column="is_deleted"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createUser" column="create_user"/>
+        <result property="createDept" column="create_dept"/>
+        <result property="createOrganization" column="create_organization"/>
+        <result property="createDate" column="create_date"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateDate" column="update_date"/>
+        <result property="remarks" column="remarks"/>
+    </resultMap>
+    <select id="getOrganizationIds" resultType="java.lang.String">
+        SELECT id FROM sys_dept WHERE FIND_IN_SET(id,#{ancestors}) AND dept_type = '1';
+    </select>
+    <select id="findList" resultType="com.smart.entity.system.DeptEntity">
+        SELECT * FROM (
+        SELECT
+        t.*,
+        ( SELECT COUNT(0) FROM sys_dept WHERE is_deleted = '0' AND parent_id = t.id ) AS childCount
+        FROM
+        sys_dept t
+        ) n
+        <if test="ew.customSqlSegment != null and ew.customSqlSegment != ''">
+            ${ew.customSqlSegment}
+        </if>
+    </select>
+
+    <select id="findChildrenByParentIds" resultType="com.smart.entity.system.DeptEntity">
+        WITH RECURSIVE cte AS (
+        SELECT *
+        FROM sys_dept
+        WHERE parent_id in
+        <foreach collection="ids" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        UNION ALL
+        SELECT c.*
+        FROM cte
+        JOIN sys_dept c ON c.parent_id = cte.id
+        )
+        SELECT * FROM cte;
+    </select>
+</mapper>

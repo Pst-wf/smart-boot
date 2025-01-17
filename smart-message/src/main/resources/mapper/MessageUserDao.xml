@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smart.message.dao.MessageUserDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.smart.entity.message.MessageUserEntity" id="messageUserMap">
+        <result property="id" column="id"/>
+        <result property="chatId" column="chat_id"/>
+        <result property="messageId" column="message_id"/>
+        <result property="sendTime" column="send_time"/>
+        <result property="receiveUser" column="receive_user"/>
+        <result property="isRead" column="is_read"/>
+        <result property="readTime" column="read_time"/>
+        <result property="deletedStatus" column="deleted_status"/>
+    </resultMap>
+    <select id="findReceive" resultType="com.smart.entity.message.MessageUserEntity">
+        SELECT *
+        FROM (SELECT a.*,
+                     b.message_title   AS "message.messageTitle",
+                     c.nickname     AS sendUserName
+              FROM sys_message_user a
+                       LEFT JOIN sys_message b ON a.message_id = b.id
+                       LEFT JOIN sys_user c ON b.create_user = c.id
+            WHERE
+                1 = 1
+            <if test="messageUser.messageTitle != null and  messageUser.messageTitle != ''">
+                AND b.message_title LIKE CONCAT('%', #{messageUser.messageTitle}, '%')
+            </if>
+            <if test="messageUser.sendUserName != null and messageUser.sendUserName != ''">
+                AND c.nickname LIKE CONCAT('%', #{messageUser.sendUserName}, '%')
+            </if>
+              ) t
+        <if test="ew.customSqlSegment != null and ew.customSqlSegment != ''">
+            ${ew.customSqlSegment}
+        </if>
+    </select>
+
+</mapper>

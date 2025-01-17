@@ -1,0 +1,125 @@
+package ${package}.entity.${moduleName};
+
+
+import com.baomidou.mybatisplus.annotation.TableName;
+#if(${hasDate})
+import com.fasterxml.jackson.annotation.JsonFormat;
+#end
+import com.smart.model.excel.annotation.ExcelField;
+import com.smart.model.excel.annotation.ExcelFields;
+#if(${extentBaseEntity})
+import ${package}.mybatis.entity.BaseEntity;
+#else
+import ${package}.mybatis.entity.BaseIdEntity;
+#end
+#if(${hasBigDecimal})
+import java.math.BigDecimal;
+#end
+#if(${hasDate})
+import java.util.Date;
+#end
+#if(${hasQuery} || ${hasNotNull})
+import ${package}.mybatis.annotation.Column;
+#if(${hasQuery})
+import ${package}.mybatis.enums.QueryType;
+#end
+#end
+#if(${uploadColumns.size()} >0 || ${betweenColumns.size()} >0)
+import com.smart.entity.file.FileEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
+import java.util.List;
+#end
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
+import lombok.NoArgsConstructor;
+
+/**
+ * ${comments}
+ *
+ * @author wf
+ * @since ${datetime}
+ */
+@EqualsAndHashCode(callSuper = true)
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@FieldNameConstants
+@TableName("${tableName}")
+@ExcelFields({
+#foreach ($column in $listColumns)
+        @ExcelField(title = "${column.comments}", attrName = "${column.attrName}", #if($column.dictCode) dictCode = "$column.dictCode",#end align = ExcelField.Align.CENTER, sort = ${foreach.count})#if(${foreach.hasNext}),
+#else
+
+#end
+#end
+})
+public class ${className}Entity extends#if(${extentBaseEntity}) BaseEntity#else BaseIdEntity#end {
+	private static final long serialVersionUID = 1L;
+#foreach ($column in $columns)
+#if(!$column.isDefault)
+	/**
+	 * $column.comments
+	 */
+#if($column.queryType == "EQ")
+    @Column(name = "${column.columnName}", queryType = QueryType.EQ#if($column.isNotNull == "1"), isNull = false#end)
+#elseif($column.queryType == "LIKE")
+    @Column(name = "${column.columnName}", queryType = QueryType.LIKE#if($column.isNotNull == "1"), isNull = false#end)
+#elseif($column.queryType == "NE")
+    @Column(name = "${column.columnName}", queryType = QueryType.NE#if($column.isNotNull == "1"), isNull = false#end)
+#elseif($column.queryType == "GT")
+    @Column(name = "${column.columnName}", queryType = QueryType.GT#if($column.isNotNull == "1"), isNull = false#end)
+#elseif($column.queryType == "GE")
+    @Column(name = "${column.columnName}", queryType = QueryType.GE#if($column.isNotNull == "1"), isNull = false#end)
+#elseif($column.queryType == "LT")
+    @Column(name = "${column.columnName}", queryType = QueryType.LT#if($column.isNotNull == "1"), isNull = false#end)
+#elseif($column.queryType == "LE")
+    @Column(name = "${column.columnName}", queryType = QueryType.LE#if($column.isNotNull == "1"), isNull = false#end)
+#end
+#if(!$column.queryType && $column.isNotNull == "1")
+    @Column(isNull = false)
+#end
+#if($column.attrType == "Date")
+    @JsonFormat(pattern = "#if($column.columnType == "datetime")yyyy-MM-dd HH:mm:ss#elseif($column.columnType == "date")yyyy-MM-dd#end" ,timezone="GMT+8")
+#end
+    private $column.attrType $column.attrName;
+#end
+#end
+#foreach ($column in $inColumns)
+
+    /**
+     * $column.comments
+     */
+    @Column(name = "${column.columnName}", queryType = QueryType.IN)
+    @TableField(exist = false)
+    private List<$column.attrType> $column.attrName;
+#end
+#foreach ($column in $notInColumns)
+
+    /**
+     * $column.comments
+     */
+    @Column(name = "${column.columnName}", queryType = QueryType.NOT_IN)
+    @TableField(exist = false)
+    private List<$column.attrType> $column.attrName;
+#end
+#foreach ($column in $betweenColumns)
+
+    /**
+     * $column.comments
+     */
+    @Column(name = "${column.columnName}", queryType = QueryType.BETWEEN)
+    @TableField(exist = false)
+    private List<$column.attrType> $column.attrName;
+#end
+#foreach ($column in $uploadColumns)
+
+    /**
+     * $column.comments
+     */
+    @TableField(exist = false)
+    private List<FileEntity> $column.attrName;
+#end
+
+}

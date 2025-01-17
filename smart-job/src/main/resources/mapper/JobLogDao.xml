@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smart.job.dao.JobLogDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.smart.entity.job.JobLogEntity" id="jobLogMap">
+        <result property="id" column="id"/>
+        <result property="jobGroup" column="job_group"/>
+        <result property="jobId" column="job_id"/>
+        <result property="executorAddress" column="executor_address"/>
+        <result property="executorHandler" column="executor_handler"/>
+        <result property="executorParam" column="executor_param"/>
+        <result property="executorShardingParam" column="executor_sharding_param"/>
+        <result property="executorFailRetryCount" column="executor_fail_retry_count"/>
+        <result property="triggerTime" column="trigger_time"/>
+        <result property="triggerCode" column="trigger_code"/>
+        <result property="triggerMsg" column="trigger_msg"/>
+        <result property="handleTime" column="handle_time"/>
+        <result property="handleCode" column="handle_code"/>
+        <result property="handleMsg" column="handle_msg"/>
+        <result property="alarmStatus" column="alarm_status"/>
+    </resultMap>
+    <update id="updateAlarmStatus">
+        UPDATE sys_job_log
+        SET `alarm_status` = #{newAlarmStatus}
+        WHERE `id` = #{logId}
+          AND `alarm_status` = #{oldAlarmStatus}
+    </update>
+    <delete id="clearLog">
+        delete from sys_job_log
+        WHERE id in
+        <foreach collection="logIds" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </delete>
+    <select id="findLostJobIds" resultType="java.lang.String">
+        SELECT t.id
+        FROM sys_job_log t
+                 LEFT JOIN sys_job_registry t2 ON t.executor_address = t2.registry_value
+        WHERE t.trigger_code = 200
+          AND t.handle_code = 0
+          AND t.trigger_time <![CDATA[ <= ]]> #{lostTime}
+          AND t2.id IS NULL;
+    </select>
+    <select id="findFailJobLogIds" resultType="java.lang.String">
+        SELECT id
+        FROM `sys_job_log`
+        WHERE !(
+                (trigger_code in (0, 200) and handle_code = 0)
+                OR
+                (handle_code = 200)
+            )
+          AND `alarm_status` = 0
+        ORDER BY id ASC
+        LIMIT #{pageSize}
+    </select>
+    <select id="findClearLogIds" resultType="java.lang.String">
+        SELECT id FROM sys_job_log
+        <trim prefix="WHERE" prefixOverrides="AND | OR">
+            <if test="jobGroup gt 0">
+                AND job_group = #{jobGroup}
+            </if>
+            <if test="jobId gt 0">
+                AND job_id = #{jobId}
+            </if>
+            <if test="clearBeforeTime != null">
+                AND trigger_time <![CDATA[ <= ]]> #{clearBeforeTime}
+            </if>
+            <if test="clearBeforeNum gt 0">
+                AND id NOT in(
+                SELECT id FROM(
+                SELECT id FROM sys_job_log AS t
+                <trim prefix="WHERE" prefixOverrides="AND | OR">
+                    <if test="jobGroup gt 0">
+                        AND t.job_group = #{jobGroup}
+                    </if>
+                    <if test="jobId gt 0">
+                        AND t.job_id = #{jobId}
+                    </if>
+                </trim>
+                ORDER BY t.trigger_time desc
+                LIMIT 0, #{clearBeforeNum}
+                ) t1
+                )
+            </if>
+        </trim>
+        order by id asc
+        LIMIT #{pageSize}
+    </select>
+    <select id="findList" resultType="com.smart.entity.job.JobLogEntity">
+        SELECT a.*,
+               b.title AS 'groupName',
+               c.job_desc AS 'jobName'
+        FROM sys_job_log a
+        LEFT JOIN sys_job_group b ON a.job_group = b.id
+        LEFT JOIN sys_job c ON a.job_id = c.id
+        <if test="ew.customSqlSegment != null and ew.customSqlSegment != ''">
+            ${ew.customSqlSegment}
+        </if>
+    </select>
+    <select id="findLogReport" resultType="java.util.LinkedHashMap">
+        SELECT COUNT(handle_code)                                                                 triggerDayCount,
+               SUM(CASE WHEN (trigger_code in (0, 200) and handle_code = 0) then 1 else 0 end) as triggerDayCountRunning,
+               SUM(CASE WHEN handle_code = 200 then 1 else 0 end)                              as triggerDayCountSuc
+        FROM sys_job_log
+        WHERE trigger_time BETWEEN #{from} and #{to}
+    </select>
+
+</mapper>

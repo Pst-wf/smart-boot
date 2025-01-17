@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smart.system.dao.UserDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.smart.entity.system.UserEntity" id="userMap">
+        <result property="id" column="id"/>
+        <result property="nickname" column="nickname"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="passwordBase" column="password_base"/>
+        <result property="gender" column="gender"/>
+        <result property="phone" column="phone"/>
+        <result property="email" column="email"/>
+        <result property="avatar" column="avatar"/>
+        <result property="wxOpenid" column="wx_openid"/>
+        <result property="wxUnionid" column="wx_unionid"/>
+        <result property="gitLabToken" column="git_lab_token"/>
+        <result property="lastLoginIp" column="last_login_ip"/>
+        <result property="lastLoginDate" column="last_login_date"/>
+        <result property="userStatus" column="user_status"/>
+        <result property="freezeDate" column="freeze_date"/>
+        <result property="freezeCause" column="freeze_cause"/>
+        <result property="isSys" column="is_sys"/>
+        <result property="isDeleted" column="is_deleted"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createUser" column="create_user"/>
+        <result property="createDept" column="create_dept"/>
+        <result property="createOrganization" column="create_organization"/>
+        <result property="createDate" column="create_date"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateDate" column="update_date"/>
+        <result property="remarks" column="remarks"/>
+    </resultMap>
+
+    <resultMap type="com.smart.entity.system.UserEntity" id="userRoleMap">
+        <result property="id" column="id"/>
+        <result property="nickname" column="nickname"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="passwordBase" column="password_base"/>
+        <result property="gender" column="gender"/>
+        <result property="phone" column="phone"/>
+        <result property="email" column="email"/>
+        <result property="avatar" column="avatar"/>
+        <result property="wxOpenid" column="wx_openid"/>
+        <result property="wxUnionid" column="wx_unionid"/>
+        <result property="gitLabToken" column="git_lab_token"/>
+        <result property="lastLoginIp" column="last_login_ip"/>
+        <result property="lastLoginDate" column="last_login_date"/>
+        <result property="userStatus" column="user_status"/>
+        <result property="freezeDate" column="freeze_date"/>
+        <result property="freezeCause" column="freeze_cause"/>
+        <result property="isSys" column="is_sys"/>
+        <result property="isDeleted" column="is_deleted"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createUser" column="create_user"/>
+        <result property="createDept" column="create_dept"/>
+        <result property="createOrganization" column="create_organization"/>
+        <result property="createDate" column="create_date"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateDate" column="update_date"/>
+        <result property="remarks" column="remarks"/>
+        <collection property="identityList" column="id" select="findIdentityList"/>
+    </resultMap>
+    <update id="updateUserStatus">
+        UPDATE sys_user
+        SET user_status = #{userStatus},
+            freeze_date = #{date},
+            update_by   = #{identityId}
+        WHERE id = #{id}
+    </update>
+    <update id="updateLoginInfo">
+        UPDATE sys_user
+        SET last_login_ip   = #{lastLoginIp},
+            last_login_date = #{lastLoginDate}
+        WHERE id = #{id}
+    </update>
+
+    <select id="findIdentityList" resultType="com.smart.entity.system.IdentityEntity">
+        SELECT a.id              AS id,
+               a.user_id         AS userId,
+               a.role_id         AS roleId,
+               a.post_id         AS postId,
+               a.dept_id         AS deptId,
+               a.organization_id AS organizationId,
+               b.role_name       AS roleName,
+               e.post_name       AS postName,
+               c.dept_name       AS deptName,
+               d.dept_name       AS organizationName,
+               c.ancestors       AS deptAncestors
+        FROM sys_identity a
+                 LEFT JOIN sys_role b ON b.id = a.role_id
+                 LEFT JOIN sys_dept c ON c.id = a.dept_id
+                 LEFT JOIN sys_dept d ON d.id = a.organization_id
+                 LEFT JOIN sys_post e ON e.id = a.post_id
+        WHERE a.user_id = #{userId}
+          AND a.is_deleted = '0'
+    </select>
+
+    <select id="getUserWithIdentity" resultMap="userRoleMap">
+        SELECT *
+        FROM sys_user
+        WHERE id = #{id}
+    </select>
+    <select id="findPageWithIdentity" resultType="com.smart.entity.system.UserEntity">
+        SELECT
+        *
+        FROM
+        (
+        SELECT
+        a.*,
+        GROUP_CONCAT(
+        f.id
+        ) AS hasPostId ,
+        GROUP_CONCAT(
+        d.id
+        ) AS hasDeptIds ,
+        GROUP_CONCAT(
+        e.id
+        ) AS hasOrganizationIds ,
+        GROUP_CONCAT(
+        IF( b.dept_id = b.organization_id ,CONCAT( e.dept_name, '/', f.post_name ,'（',c.role_name,'）'),CONCAT(
+        e.dept_name, '/',
+        d.dept_name, '/', f.post_name ,'（',c.role_name,'）')))
+        AS identityInfo,
+        GROUP_CONCAT(DISTINCT c.role_name)
+        AS roleNames
+        FROM
+        sys_user a
+        LEFT JOIN sys_identity b ON a.id = b.user_id AND b.is_deleted = '0'
+        LEFT JOIN sys_role c ON c.id = b.role_id AND c.is_deleted = '0'
+        LEFT JOIN sys_dept d ON d.id = b.dept_id AND d.is_deleted = '0'
+        LEFT JOIN sys_dept e ON e.id = b.organization_id AND e.is_deleted = '0'
+        LEFT JOIN sys_post f ON f.id = b.post_id AND f.is_deleted = '0'
+        WHERE
+        a.is_deleted = '0'
+        <if test="user.deptId != null and user.deptId != ''">
+            AND ( d.ancestors LIKE CONCAT('%', #{user.deptId}, '%') OR b.dept_id = #{user.deptId} )
+        </if>
+        <if test="user.postId != null and user.postId != ''">
+            AND b.post_id = #{user.postId}
+        </if>
+        <if test="user.roleId != null and user.roleId != ''">
+            AND b.role_id = #{user.roleId}
+        </if>
+        GROUP BY
+        a.id) t
+        <if test="ew.customSqlSegment != null and ew.customSqlSegment != ''">
+            ${ew.customSqlSegment}
+        </if>
+    </select>
+    <select id="getUserById" resultType="com.smart.entity.system.UserEntity">
+        SELECT *
+        FROM sys_user
+        WHERE id = #{id}
+    </select>
+
+    <!--    <update id="updateFreezeDate">-->
+    <!--        UPDATE user SET freeze_date = #{freezeDate},update_by = #{updateBy},update_date = #{updateDate} WHERE id = #{id}-->
+    <!--    </update>-->
+
+</mapper>

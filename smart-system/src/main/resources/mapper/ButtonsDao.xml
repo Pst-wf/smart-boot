@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smart.system.dao.ButtonsDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.smart.entity.system.ButtonsEntity" id="buttonsMap">
+        <result property="id" column="id"/>
+        <result property="code" column="code"/>
+        <result property="name" column="desc"/>
+        <result property="menuId" column="menu_id"/>
+        <result property="sort" column="sort"/>
+    </resultMap>
+    <select id="findButtonsByRoleId" resultType="com.smart.entity.system.ButtonsEntity">
+        SELECT b.id,
+               b.code,
+               b.name,
+               b.menu_id,
+               b.sort
+        FROM sys_role_buttons a
+                 LEFT JOIN sys_buttons b
+                           ON b.code = a.button_code
+        WHERE a.role_id = #{roleId}
+    </select>
+
+</mapper>

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smart.system.dao.MenuDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.smart.entity.system.MenuEntity" id="menuMap">
+        <result property="id" column="id"/>
+        <result property="isDeleted" column="is_deleted"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createUser" column="create_user"/>
+        <result property="createDept" column="create_dept"/>
+        <result property="createOrganization" column="create_organization"/>
+        <result property="createDate" column="create_date"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateDate" column="update_date"/>
+        <result property="remarks" column="remarks"/>
+        <result property="parentId" column="parent_id"/>
+        <result property="menuType" column="menu_type"/>
+        <result property="menuName" column="menu_name"/>
+        <result property="routeName" column="route_name"/>
+        <result property="routePath" column="route_path"/>
+        <result property="pathParam" column="path_param"/>
+        <result property="component" column="component"/>
+        <result property="icon" column="icon"/>
+        <result property="iconType" column="icon_type"/>
+        <result property="antIcon" column="ant_icon"/>
+        <result property="i18nKey" column="i18n_key"/>
+        <result property="keepAlive" column="keep_alive"/>
+        <result property="constant" column="constant"/>
+        <result property="order" column="order"/>
+        <result property="href" column="href"/>
+        <result property="redirect" column="redirect"/>
+        <result property="hideInMenu" column="hide_in_menu"/>
+        <result property="activeMenu" column="active_menu"/>
+        <result property="multiTab" column="multi_tab"/>
+        <result property="fixedIndexInTab" column="fixed_index_in_tab"/>
+        <result property="query" column="query" typeHandler="com.smart.mybatis.handler.FastJSONArrayTypeHandler"/>
+        <result property="layout" column="layout"/>
+        <result property="props" column="props"/>
+        <result property="weight" column="weight"/>
+    </resultMap>
+    <select id="findMenuByRoleId" resultType="com.smart.entity.system.MenuEntity">
+        SELECT b.id,
+               b.is_deleted,
+               b.create_by,
+               b.create_user,
+               b.create_dept,
+               b.create_organization,
+               b.create_date,
+               b.update_by,
+               b.update_date,
+               b.remarks,
+               b.parent_id,
+               b.menu_type,
+               b.menu_name,
+               b.route_name,
+               b.route_path,
+               b.component,
+               b.path_param,
+               b.icon,
+               b.icon_type,
+               b.ant_icon,
+               b.i18n_key,
+               b.keep_alive,
+               b.constant,
+               b.`order`,
+               b.href,
+               b.redirect,
+               b.hide_in_menu,
+               b.active_menu,
+               b.multi_tab,
+               b.fixed_index_in_tab,
+               b.query,
+               b.layout,
+               b.props,
+               b.weight,
+               b.status
+        FROM sys_role_menu a
+                 LEFT JOIN sys_menu b
+                           ON b.id = a.menu_id
+        WHERE a.role_id = #{roleId}
+          AND b.is_deleted = '0'
+          AND b.status = '1'
+        ORDER BY b.`order`;
+
+    </select>
+    <select id="findChildrenByParentIds" resultType="com.smart.entity.system.MenuEntity">
+        WITH RECURSIVE cte AS (
+            SELECT *
+            FROM sys_menu
+            WHERE parent_id in
+            <foreach collection="ids" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+            UNION ALL
+            SELECT c.*
+            FROM cte
+                     JOIN sys_menu c ON c.parent_id = cte.id
+        )
+        SELECT * FROM cte;
+    </select>
+</mapper>

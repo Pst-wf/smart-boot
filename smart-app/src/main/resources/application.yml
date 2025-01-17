@@ -1,0 +1,16 @@
+server:
+  maxHttpHeaderSize: 1024000
+  tomcat:
+    uri-encoding: UTF-8
+  servlet:
+    encoding:
+      charset: UTF-8
+spring:
+  profiles:
+    active: dev
+    include: core,mybatis,druid,xxl,pool,camunda
+  application:
+    name: smart-boot
+## Xxl-Job开启状态
+job:
+  openStatus: true

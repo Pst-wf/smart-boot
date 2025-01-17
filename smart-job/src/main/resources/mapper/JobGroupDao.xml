@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smart.job.dao.JobGroupDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.smart.entity.job.JobGroupEntity" id="jobGroupMap">
+        <result property="id" column="id"/>
+        <result property="appName" column="app_name"/>
+        <result property="title" column="title"/>
+        <result property="addressType" column="address_type"/>
+        <result property="addressList" column="address_list"/>
+        <result property="isDeleted" column="is_deleted"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createUser" column="create_user"/>
+        <result property="createDept" column="create_dept"/>
+        <result property="createOrganization" column="create_organization"/>
+        <result property="createDate" column="create_date"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateDate" column="update_date"/>
+        <result property="remarks" column="remarks"/>
+    </resultMap>
+    <update id="changeStatus">
+        UPDATE sys_job_group SET online_status = #{onlineStatus} WHERE app_name = #{appName}
+    </update>
+    <select id="findByAddressType" resultType="com.smart.entity.job.JobGroupEntity">
+        SELECT *
+        FROM sys_job_group AS t
+        WHERE t.address_type = #{addressType}
+        ORDER BY t.app_name, t.title, t.id ASC
+    </select>
+
+</mapper>

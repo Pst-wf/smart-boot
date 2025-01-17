@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smart.message.dao.MessageDao">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.smart.entity.message.MessageEntity" id="messageMap">
+        <result property="id" column="id"/>
+        <result property="messageTitle" column="message_title"/>
+        <result property="messageContent" column="message_content"/>
+        <result property="isToMail" column="is_to_mail"/>
+        <result property="mailSendName" column="mail_send_name"/>
+        <result property="messageStatus" column="message_status"/>
+        <result property="sendTime" column="send_time"/>
+        <result property="receiveUsers" column="receive_users"/>
+        <result property="isDeleted" column="is_deleted"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createUser" column="create_user"/>
+        <result property="createDept" column="create_dept"/>
+        <result property="createOrganization" column="create_organization"/>
+        <result property="createDate" column="create_date"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateDate" column="update_date"/>
+        <result property="remarks" column="remarks"/>
+    </resultMap>
+
+    <select id="findCollectionList" resultType="com.smart.entity.message.MessageEntity">
+        SELECT * FROM sys_message
+        <if test="ew.customSqlSegment != null and ew.customSqlSegment != ''">
+            ${ew.customSqlSegment}
+        </if>
+    </select>
+
+    <update id="updateDeletedValue">
+        UPDATE sys_message SET is_deleted = #{isDeleted} WHERE id IN
+        <foreach collection='ids' item='item' separator=',' open='(' close=')'>
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="getOne" resultType="com.smart.entity.message.MessageEntity">
+        SELECT * FROM sys_message WHERE id = #{id}
+    </select>
+</mapper>

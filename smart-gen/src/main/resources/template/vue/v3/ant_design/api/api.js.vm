@@ -1,0 +1,60 @@
+import {getRequest, postRequest, getRequestBlob, postRequestBlob} from '/src/lib/axios';
+
+export const ${classname}Api = {
+    /**
+     * 添加${comments}
+     */
+    add${className}: (param) => {
+        return postRequest('/${moduleName}/${pathName}/save', param);
+    },
+
+    /**
+     * 更新${comments}
+     */
+    update${className}: (param) => {
+        return postRequest('/${moduleName}/${pathName}/update', param);
+    },
+
+    /**
+     * 删除${comments}
+     */
+    delete${className}: (param) => {
+        return postRequest('/${moduleName}/${pathName}/delete', param);
+    },
+
+    /**
+     * ${comments}分页列表
+     */
+    ${classname}Page: (params) => {
+        return getRequest('/${moduleName}/${pathName}/page', params);
+    },
+
+    /**
+     * ${comments}列表
+     */
+    ${classname}List: (params) => {
+        return getRequest('/${moduleName}/${pathName}/list', params);
+    },
+
+    /**
+     * ${comments}详情
+     */
+    get${className}: (params) => {
+        return getRequest('/${moduleName}/${pathName}/get', params);
+    },
+
+    /**
+     * 导出数据
+     * @param params
+     */
+    export${className}Data: (params) => {
+        return postRequestBlob('/${moduleName}/${pathName}/export', params);
+    },
+
+    /**
+     * 下载导入模板
+     */
+    download${className}Template: () => {
+        return getRequestBlob('/${moduleName}/${pathName}/downloadTemplate');
+    }
+};

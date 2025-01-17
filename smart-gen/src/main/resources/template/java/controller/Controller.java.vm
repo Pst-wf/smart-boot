@@ -1,0 +1,159 @@
+package ${package}.${moduleName}.controller;
+
+import ${package}.aop.log.LogType;
+import ${package}.aop.log.SaveLog;
+import ${package}.aop.permission.HasPermission;
+import com.smart.common.utils.DateUtil;
+import ${package}.entity.${moduleName}.${className}Entity;
+import com.smart.model.excel.annotation.ExcelField;
+import ${package}.model.response.r.Result;
+import ${package}.model.response.r.ResultCode;
+import com.smart.model.response.r.ResultWrapper;
+import ${package}.service.${moduleName}.${className}Service;
+import com.smart.tools.excel.ExcelExport;
+import com.smart.tools.excel.ExcelImport;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+
+import javax.servlet.http.HttpServletResponse;
+import java.util.List;
+
+/**
+ * ${comments} Controller
+ *
+ * @author wf
+ * @since ${datetime}
+ */
+@RestController
+@RequestMapping("/${moduleName}/${pathName}")
+public class ${className}Controller {
+    @Autowired
+    ${className}Service ${classname}Service;
+    @Autowired
+    ResultWrapper resultWrapper;
+
+    /**
+     * 列表
+     *
+     * @param ${classname}Entity ${comments}bean
+     * @return String
+     */
+    @GetMapping("/page")
+    public String page(${className}Entity ${classname}Entity) {
+        return Result.data(${classname}Service.findPage(${classname}Entity));
+    }
+
+    /**
+     * 列表（不分页）
+     *
+     * @param ${classname}Entity ${comments}bean
+     * @return String
+     */
+    @GetMapping("/list")
+    public String list(${className}Entity ${classname}Entity) {
+        return Result.data(${classname}Service.findList(${classname}Entity));
+    }
+
+    /**
+     * 信息
+     *
+     * @param id 主键ID
+     * @return String
+     */
+    @GetMapping("/get")
+    public String get(@RequestParam String id) {
+        ${className}Entity result = ${classname}Service.get(id);
+        return result != null ? Result.data(result) : Result.fail(ResultCode.FAIL);
+    }
+
+    /**
+     * 保存
+     *
+     * @param ${classname}Entity ${comments}bean
+     * @return String
+     */
+    @HasPermission("${classname}:add")
+    @PostMapping("/save")
+    @SaveLog(module = "${comments}管理" , type = LogType.ADD)
+    public String save(@RequestBody ${className}Entity ${classname}Entity) {
+        ${className}Entity result = ${classname}Service.saveEntity(${classname}Entity);
+        return result != null ? Result.data(result) : Result.fail(ResultCode.FAIL);
+    }
+
+    /**
+     * 修改
+     *
+     * @param ${classname}Entity ${comments}bean
+     * @return String
+     */
+    @HasPermission("${classname}:update")
+    @PostMapping("/update")
+    @SaveLog(module = "${comments}管理" , type = LogType.UPDATE)
+    public String update(@RequestBody ${className}Entity ${classname}Entity) {
+        ${className}Entity result = ${classname}Service.updateEntity(${classname}Entity);
+        return result != null ? Result.data(result) : Result.fail(ResultCode.FAIL);
+    }
+
+    /**
+     * 删除
+     *
+     * @param ${classname}Entity ${comments}bean
+     * @return String
+     */
+    @HasPermission("${classname}:delete")
+    @PostMapping("/delete")
+    @SaveLog(module = "${comments}管理" , type = LogType.DELETE)
+    public String delete(@RequestBody ${className}Entity ${classname}Entity) {
+        return Result.status(${classname}Service.delete(${classname}Entity));
+    }
+
+    /**
+     * 导出
+     *
+     * @param ${classname}Entity ${comments}bean
+     * @param response 响应
+     */
+    @HasPermission("${classname}:export")
+    @PostMapping(value = "/export")
+    public void exportData(@RequestBody ${className}Entity ${classname}Entity, HttpServletResponse response) {
+        List<${className}Entity> list = resultWrapper.setListIdentityInfo(${classname}Service.findList(${classname}Entity), ${className}Entity.class);
+        String fileName = "${comments}数据" + DateUtil.getDate("yyyyMMddHHmmss") + ".xlsx";
+        try (ExcelExport export = new ExcelExport("${comments}数据", ${className}Entity.class)) {
+            export.setDataList(list).write(response, fileName);
+        }
+    }
+
+    /**
+     * 导入
+     *
+     * @param request 请求
+     */
+    @HasPermission("${classname}:import")
+    @PostMapping(value = "/import")
+    public String importData(MultipartHttpServletRequest request) {
+        MultiValueMap<String, MultipartFile> multiFileMap = request.getMultiFileMap();
+        List<MultipartFile> files = multiFileMap.get("files");
+        try (ExcelImport excelImport = new ExcelImport(files.get(0), 2, 0)) {
+            List<${className}Entity> dataList = excelImport.getDataList(${className}Entity.class);
+            return Result.status(${classname}Service.saveBatch(dataList));
+        } catch (Exception e) {
+            return Result.fail("导入失败！");
+        }
+    }
+
+    /**
+     * 下载导入模板
+     *
+     * @param response 响应
+     */
+    @GetMapping(value = "/downloadTemplate")
+    public void downloadTemplate(HttpServletResponse response) {
+        String fileName = "导入${comments}模板.xlsx";
+        try (ExcelExport export = new ExcelExport("${comments}数据", ${className}Entity.class, null, ExcelField.Type.IMPORT)) {
+            export.write(response, fileName);
+        }
+    }
+}

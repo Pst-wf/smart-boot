@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smart.job.dao.JobLogReportDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.smart.entity.job.JobLogReportEntity" id="jobLogReportMap">
+        <result property="id" column="id"/>
+        <result property="triggerDay" column="trigger_day"/>
+        <result property="runningCount" column="running_count"/>
+        <result property="sucCount" column="suc_count"/>
+        <result property="failCount" column="fail_count"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+    <update id="updateByTriggerDay">
+        UPDATE sys_job_log_report
+        SET `running_count` = #{runningCount},
+            `suc_count`     = #{sucCount},
+            `fail_count`    = #{failCount}
+        WHERE `trigger_day` = #{triggerDay}
+    </update>
+
+</mapper>
