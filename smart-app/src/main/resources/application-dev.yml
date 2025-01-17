@@ -24,7 +24,7 @@ spring:
     database: 7
 ###### Xxl Job  ######
 xxl:
-  logPath: F:\xxl_logs\job # 日志输出地址
+  logPath: F:\xxl_logs\job  # 日志输出地址
   admin:
     addresses: http://127.0.0.1:8888
   executor:
