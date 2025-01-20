@@ -1,4 +1,15 @@
-# Smart 敏捷开发平台
+<div align="center">
+	<img src="./public/favicon.ico" width="160" />
+	<h1>Smart 敏捷开发平台</h1>
+
+[![license](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
+[![github stars](https://img.shields.io/github/stars/Pst-wf/smart-boot)](https://github.com/Pst-wf/smart-boot)
+[![github forks](https://img.shields.io/github/forks/Pst-wf/smart-boot)](https://github.com/Pst-wf/smart-boot)
+[![gitee stars](https://gitee.com/pstech360/smart-boot/badge/star.svg)](https://gitee.com/pstech360/smart-boot)
+</div>
+
+> 如果您觉得 `Smart`对您有所帮助，或者您喜欢我们的项目，请在 GitHub 上给我们一个 ⭐️。您的支持是我们持续改进和增加新功能的动力！感谢您的支持！
+
 ### 平台简介
 * 采用前后端分离的模式，前端框架为：Smart-Web (基于 Vue、Ant Design Vue)
 * 后端使用 Springboot、Mybatis-plus Security Oauth2 等技术栈
@@ -97,7 +108,7 @@
 
 
 ### 演示地址
-[http://smart.pstech360.com](http://smart.pstech360.com)      
+[http://smart.pstech360.com](http://smart.pstech360.com)
 
 账号：system       
 密码：123456
