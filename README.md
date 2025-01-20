@@ -1,4 +1,4 @@
-# Smart 快速开发平台
+# Smart 敏捷开发平台
 ### 平台简介
 * 采用前后端分离的模式，前端框架为：Smart-Web (基于 Vue、Ant Design Vue)
 * 后端使用 Springboot、Mybatis-plus Security Oauth2 等技术栈

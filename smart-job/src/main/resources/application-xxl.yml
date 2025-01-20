@@ -5,12 +5,12 @@ xxl:
     ### xxl-job, i18n (default is zh_CN, and you can choose "zh_CN", "zh_TC" and "en")
     i18n: zh_CN
     admin:
-      ## （转移到基础配置文件中）
+      ## （已修改成默认本地IP）
       ### 调度中心部署跟地址 [选填]：如调度中心集群部署存在多个地址则用逗号分隔。执行器将会使用该地址进行"执行器心跳注册"和"任务结果回调"；为空则关闭自动注册；
 #      addresses: http://127.0.0.1:8888
     executor:
-      ## （转移到基础配置文件中）
-#      address: http://127.0.0.1:8888
+      ## xxl作业执行器注册表地址：默认使用注册表地址，否则如果地址为空，则使用ip:port
+      address:
       ### 执行器AppName [选填]：执行器心跳注册分组依据；为空则关闭自动注册
       appName: smart-job
       ### 执行器名称 [选填]

@@ -18,8 +18,8 @@ import org.springframework.context.annotation.Configuration;
 public class XxlJobConfig {
     private final Logger logger = LoggerFactory.getLogger(XxlJobConfig.class);
 
-    @Value("${xxl.admin.addresses}")
-    private String adminAddresses;
+    @Value("${server.port}")
+    private String appPort;
 
     @Value("${xxl.job.accessToken}")
     private String accessToken;
@@ -50,6 +50,8 @@ public class XxlJobConfig {
     public XxlJobSpringExecutor xxlJobExecutor() {
         log.error(">>>>>>>>>>> 任务处理器配置初始化.");
         XxlJobSpringExecutor xxlJobSpringExecutor = new XxlJobSpringExecutor();
+        // 修改成本地地址
+        String adminAddresses = "http://127.0.0.1:" + appPort;
         xxlJobSpringExecutor.setAdminAddresses(adminAddresses);
         xxlJobSpringExecutor.setAppName(appName);
         xxlJobSpringExecutor.setTitle(title);

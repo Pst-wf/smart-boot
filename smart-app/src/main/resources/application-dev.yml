@@ -5,9 +5,9 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://rm-2ze37j6mw545r0y62jo.mysql.rds.aliyuncs.com:3306/smart-demo?useSSL=false&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowmultiqueries=true&nullCatalogMeansCurrent=true
-    username: pst_mysql
-    password: 1qaz2wsx==
+    url: # 数据库地址
+    username: # 账号
+    password: # 密码
 ###### Redis ######
   redis:
     host: localhost
@@ -25,9 +25,6 @@ spring:
 ###### Xxl Job ######
 xxl:
   logPath: F:\xxl_logs\job  # 日志输出地址
-  admin:
-    addresses: http://127.0.0.1:8888
   executor:
-    address: ''
     ### 执行器端口号 [选填]：小于等于0则自动获取；默认端口为9999，单机部署多个执行器时，注意要配置不同执行器端口；
     port: 9999
