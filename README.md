@@ -1,5 +1,5 @@
 <div align="center">
-	<img src="./public/favicon.ico" width="160" />
+	<img src="./favicon.ico" width="160" />
 	<h1>Smart 敏捷开发平台</h1>
 
 [![license](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
