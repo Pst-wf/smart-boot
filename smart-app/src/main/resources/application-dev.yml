@@ -5,7 +5,7 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: # 数据库地址
+    url: jdbc:mysql://localhost:3306/smart-demo?useSSL=false&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowmultiqueries=true&nullCatalogMeansCurrent=true
     username: # 账号
     password: # 密码
 ###### Redis ######
