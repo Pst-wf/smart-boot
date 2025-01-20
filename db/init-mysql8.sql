@@ -185,9 +185,9 @@ INSERT INTO `sys_config` VALUES ('2', 'captcha_auth', '1', 'PC端是否开启验
 INSERT INTO `sys_config` VALUES ('3', 'auto_sign_up', '1', '开启会员注册', '1');
 INSERT INTO `sys_config` VALUES ('4', 'file_document_url', 'http://192.168.0.100:8001', '文件服务地址', '1');
 INSERT INTO `sys_config` VALUES ('5', 'file_document_callback_url', 'http://192.168.0.100:8888/file/callback', '在线编辑回调地址', '1');
-INSERT INTO `sys_config` VALUES ('6', 'wechat_app_id', 'wx9fdf1d81a5c6b0b6', '微信小程序APP_ID', '1');
-INSERT INTO `sys_config` VALUES ('7', 'wechat_secret', '3b295c0a821abaaba8449cbdd8c82f65', '微信小程序APP_SECRET', '1');
-INSERT INTO `sys_config` VALUES ('8', 'sys_email_config', '{\"host\":\"smtp.qq.com\",\"port\":465,\"username\":\"342480071@qq.com\",\"from\":\"342480071@qq.com\",\"password\":\"ubgpjpfmctpcbhia\"}', '邮箱配置', '1');
+INSERT INTO `sys_config` VALUES ('6', 'wechat_app_id', 'appId', '微信小程序APP_ID', '1');
+INSERT INTO `sys_config` VALUES ('7', 'wechat_secret', 'secret', '微信小程序APP_SECRET', '1');
+INSERT INTO `sys_config` VALUES ('8', 'sys_email_config', '{"host":"smtp.qq.com","port":465,"username":"342480071@qq.com","from":"342480071@qq.com","password":"ubgpjpfmctpcbhia"}', '邮箱配置', '1');
 
 -- ----------------------------
 -- Table structure for sys_dept
@@ -550,11 +550,6 @@ CREATE TABLE `sys_job_group`  (
   `remarks` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注信息',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '执行器' ROW_FORMAT = DYNAMIC;
-
--- ----------------------------
--- Records of sys_job_group
--- ----------------------------
-INSERT INTO `sys_job_group` VALUES ('1724151927454830594', 'smart-job', '执行器', '0', 'http://192.168.1.200:9999/', '1', '0', '', '', '', '', '2023-11-14 03:47:07', '', '2025-01-20 10:26:12', NULL);
 
 -- ----------------------------
 -- Table structure for sys_job_lock
