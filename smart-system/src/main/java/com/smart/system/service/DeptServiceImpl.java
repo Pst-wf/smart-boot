@@ -203,7 +203,12 @@ public class DeptServiceImpl extends BaseServiceImpl<DeptDao, DeptEntity> implem
                 parent = super.getById(entity.getParentId());
             }
             // 父级
-            List<DeptEntity> children = baseMapper.findChildrenByParentIds(ListUtil.newArrayList(entity.getParentId()));
+//            List<DeptEntity> children1 = baseMapper.findChildrenByParentIds(ListUtil.newArrayList(entity.getParentId()));
+            // 优化兼容行，原方法只适配mysql8，修改为查全表后循环匹配(若组织机构较多 需先考虑性能在考虑兼容性)
+            List<DeptEntity> list = super.list();
+            List<DeptEntity> tree = TreeUtil.buildTree(list);
+            List<DeptEntity> children = new ArrayList<>();
+            getChildrenIdAndChildrenDept(tree, ListUtil.newArrayList(entity.getParentId()), children);
             List<DeptEntity> deptEntities = TreeUtil.buildTree(children);
             handleList(deptEntities, parent);
             List<DeptEntity> format = TreeUtil.toList(deptEntities);
@@ -235,10 +240,18 @@ public class DeptServiceImpl extends BaseServiceImpl<DeptDao, DeptEntity> implem
     @Override
     public void beforeDelete(DeptEntity entity, boolean isReal) {
         // 查询对应的子菜单 补全deleteIds
-        List<DeptEntity> children = baseMapper.findChildrenByParentIds(entity.getDeleteIds());
-        Set<String> collect = children.stream().map(DeptEntity::getId).collect(Collectors.toSet());
+//        List<DeptEntity> children = baseMapper.findChildrenByParentIds(entity.getDeleteIds());
+//        Set<String> collect = children.stream().map(DeptEntity::getId).collect(Collectors.toSet());
+//        List<String> deleteIds = entity.getDeleteIds();
+//        deleteIds.addAll(collect);
+
+        // 优化兼容行，原方法只适配mysql8，修改为查全表后循环匹配(若组织机构较多 需先考虑性能在考虑兼容性)
         List<String> deleteIds = entity.getDeleteIds();
-        deleteIds.addAll(collect);
+        if (ListUtil.isNotEmpty(entity.getDeleteIds())) {
+            List<DeptEntity> list = super.list();
+            List<DeptEntity> tree = TreeUtil.buildTree(list);
+            getChildrenIdAndChildrenDept(tree, deleteIds, new ArrayList<>());
+        }
         entity.setDeleteIds(deleteIds);
 
         //验证该部门是否有人使用
@@ -279,7 +292,7 @@ public class DeptServiceImpl extends BaseServiceImpl<DeptDao, DeptEntity> implem
         for (DeptEntity dept : deptList) {
             list.add(dept);
             //所有菜单的父id与传入的根节点id比较，若相等则且类型为菜单为该级菜单的子菜单
-            if (dept.getChildren() != null && dept.getChildren().size() > 0) {
+            if (dept.getChildren() != null && !dept.getChildren().isEmpty()) {
                 for (DeptEntity child : dept.getChildren()) {
                     child.setParentName(dept.getDeptName());
                 }
@@ -373,5 +386,21 @@ public class DeptServiceImpl extends BaseServiceImpl<DeptDao, DeptEntity> implem
             sb.append(deptEntity.getDeptName());
         }
         return sb.toString();
+    }
+
+
+    /**
+     * 获取所有子集IDS和子集实体
+     */
+    private void getChildrenIdAndChildrenDept(List<DeptEntity> list, List<String> deleteIds, List<DeptEntity> res) {
+        for (DeptEntity deptEntity : list) {
+            if (deleteIds.contains(deptEntity.getParentId())) {
+                deleteIds.add(deptEntity.getId());
+                res.add(deptEntity);
+            }
+            if (deptEntity.getChildren() != null && !deptEntity.getChildren().isEmpty()) {
+                getChildrenIdAndChildrenDept(deptEntity.getChildren(), deleteIds, res);
+            }
+        }
     }
 }

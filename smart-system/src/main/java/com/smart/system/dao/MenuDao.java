@@ -29,6 +29,7 @@ public interface MenuDao extends BaseDao<MenuEntity> {
      *
      * @param ids 父级IDS
      * @return List
+     * @apiNote mysql8语法  其他数据库不支持
      */
     List<MenuEntity> findChildrenByParentIds(@Param("ids") List<String> ids);
 }

@@ -192,10 +192,18 @@ public class MenuServiceImpl extends BaseServiceImpl<MenuDao, MenuEntity> implem
     @Override
     public void beforeDelete(MenuEntity entity, boolean isReal) {
         // 查询对应的子菜单 补全deleteIds
-        List<MenuEntity> children = baseMapper.findChildrenByParentIds(entity.getDeleteIds());
-        Set<String> collect = children.stream().map(MenuEntity::getId).collect(Collectors.toSet());
+//        List<MenuEntity> children = baseMapper.findChildrenByParentIds(entity.getDeleteIds());
+//        Set<String> collect = children.stream().map(MenuEntity::getId).collect(Collectors.toSet());
+//        List<String> deleteIds = entity.getDeleteIds();
+//        deleteIds.addAll(collect);
+
+        // 优化兼容行，原方法只适配mysql8，修改为查全表后循环匹配
         List<String> deleteIds = entity.getDeleteIds();
-        deleteIds.addAll(collect);
+        if (ListUtil.isNotEmpty(entity.getDeleteIds())) {
+            List<MenuEntity> list = super.list();
+            List<MenuEntity> tree = TreeUtil.buildTree(list);
+            getChildrenId(tree, deleteIds);
+        }
         entity.setDeleteIds(deleteIds);
     }
 
@@ -410,5 +418,18 @@ public class MenuServiceImpl extends BaseServiceImpl<MenuDao, MenuEntity> implem
         return !list.isEmpty() ? list.get(0).getOrder() + 1 : 0;
     }
 
+    /**
+     * 获取所有子集IDS
+     */
+    private void getChildrenId(List<MenuEntity> list, List<String> deleteIds) {
+        for (MenuEntity menuEntity : list) {
+            if (deleteIds.contains(menuEntity.getParentId())) {
+                deleteIds.add(menuEntity.getId());
+            }
+            if (menuEntity.getChildren() != null && !menuEntity.getChildren().isEmpty()) {
+                getChildrenId(menuEntity.getChildren(), deleteIds);
+            }
+        }
+    }
 }
 
