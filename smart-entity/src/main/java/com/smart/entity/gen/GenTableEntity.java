@@ -1,6 +1,7 @@
 package com.smart.entity.gen;
 
 
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.annotation.JSONField;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -8,6 +9,7 @@ import com.smart.entity.system.MenuEntity;
 import com.smart.mybatis.annotation.Column;
 import com.smart.mybatis.entity.BaseEntity;
 import com.smart.mybatis.enums.QueryType;
+import com.smart.mybatis.handler.FastJSONObjectTypeHandler;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -70,7 +72,8 @@ public class GenTableEntity extends BaseEntity {
     /**
      * 其它生成选项
      */
-    private String options;
+    @TableField(typeHandler = FastJSONObjectTypeHandler.class)
+    private JSONObject options;
     /**
      * 所属菜单ID
      */
