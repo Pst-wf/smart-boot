@@ -1,0 +1,75 @@
+import { request } from '@/service/request';
+
+/** 获取${comments}分页 */
+export function ${classname}Page(params?: ${className}Api.${className}SearchParams) {
+  return request<${className}Api.${className}Page>({
+    url: '/${moduleName}/${pathName}/page',
+    method: 'get',
+    params
+  });
+}
+
+/** 获取${comments}集合 */
+export function ${classname}List(params?: ${className}Api.${className}SearchParams) {
+  return request<${className}Api.${className}List>({
+    url: '/${moduleName}/${pathName}/list',
+    method: 'get',
+    params
+  });
+}
+
+/** 获取${comments} */
+export function get${className}(params?: any) {
+  return request<${className}Api.${className}>({
+    url: '/${moduleName}/${pathName}/get',
+    method: 'get',
+    params
+  });
+}
+
+/** 新增${comments} */
+export function add${className}(data: any) {
+  return request<${className}Api.${className}>({
+    url: '/${moduleName}/${pathName}/save',
+    method: 'post',
+    data
+  });
+}
+
+/** 修改${comments} */
+export function edit${className}(data: any) {
+  return request<${className}Api.${className}>({
+    url: '/${moduleName}/${pathName}/update',
+    method: 'post',
+    data
+  });
+}
+
+/** 删除${comments} */
+export function delete${className}(data: any) {
+  return request<unknown>({
+    url: '/${moduleName}/${pathName}/delete',
+    method: 'post',
+    data
+  });
+}
+
+/** 导出数据 */
+export function export${className}(data?: any) {
+  return request<Blob, 'blob'>({
+    url: '/${moduleName}/${pathName}/export',
+    method: 'post',
+    data,
+    responseType: 'blob'
+  });
+}
+
+/** 下载导入模板 */
+export function download${className}Template() {
+  return request<Blob, 'blob'>({
+    url: '/${moduleName}/${pathName}/downloadTemplate',
+    method: 'get',
+    responseType: 'blob'
+  });
+}
+

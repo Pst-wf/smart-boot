@@ -136,7 +136,7 @@
     <a-card size="small" :bordered="false" :hoverable="true">
       <a-row class="smart-table-btn-block">
         <div class="smart-table-operate-block">
-          <a-button v-privilege="'${classname}:add'" type="primary" @click="showDrawer">
+          <a-button v-privilege="'${classname}:add'" type="primary" @click="showForm">
             <template #icon>
               <PlusOutlined/>
             </template>
@@ -208,8 +208,8 @@
 #end
           <template v-if="column.dataIndex === 'operate'">
             <div class="smart-table-operate">
-              <a-button type="link" size="small" @click="showDrawer(record, true)">查看</a-button>
-              <a-button v-privilege="'${classname}:update'" type="link" size="small" @click="showDrawer(record)">编辑</a-button>
+              <a-button type="link" size="small" @click="showForm(record, true)">查看</a-button>
+              <a-button v-privilege="'${classname}:update'" type="link" size="small" @click="showForm(record)">编辑</a-button>
               <a-button v-privilege="'${classname}:delete'" danger type="link" @click="singleDelete(record)">删除</a-button>
             </div>
           </template>
@@ -231,7 +231,11 @@
         />
       </div>
     </a-card>
+#if($isModal)
     <OperateModal ref="operateModal" #if($dictCodes.length() > 0 ):dict-map="dictMap"#end @reloadList="query"/>
+#else
+    <OperateDrawer ref="operateDrawer" #if($dictCodes.length() > 0 ):dict-map="dictMap"#end @reloadList="query"/>
+#end
     <ImportData ref="importData" import-url="/${moduleName}/${pathName}/import" @downloadTemplate="downloadTemplate" @finish="query"/>
   </div>
 </template>
@@ -240,7 +244,11 @@
   import {message, Modal} from 'ant-design-vue';
   import _ from 'lodash';
   import {computed, createVNode, onMounted, reactive, ref} from 'vue';
+#if($isModal)
   import OperateModal from './components/operate-modal.vue';
+#else
+  import OperateDrawer from './components/operate-drawer.vue';
+#end
   import {columns} from './columns.js';
   import {${classname}Api} from '/@/api/${apiPath}';
   import {SmartLoading} from '/@/components/framework/smart-loading';
@@ -396,10 +404,14 @@
   }
 
   // -------------- 新增、修改 右侧抽屉 --------------
+#if($isModal)
   const operateModal = ref();
+#else
+  const operateDrawer = ref();
+#end
 
 #if($uploadColumns.size() > 0 )
-  async function showDrawer(rowData, bool) {
+  async function showForm(rowData, bool) {
     const row = _.cloneDeep(rowData);
     if(row.id){
       const res = await ${classname}Api.get${className}({ id : row.id });
@@ -407,11 +419,19 @@
       row.${column.attrName} = res.data.${column.attrName};
 #end
     }
-    operateModal.value.showDrawer(row, bool);
+#if($isModal)
+    operateModal.value.showForm(row, bool);
+#else
+    operateDrawer.value.showForm(row, bool);
+#end
   }
 #else
-  function showDrawer(rowData, bool) {
-    operateModal.value.showDrawer(_.cloneDeep(rowData), bool);
+  function showForm(rowData, bool) {
+#if($isModal)
+    operateModal.value.showForm(_.cloneDeep(rowData), bool);
+#else
+    operateDrawer.value.showForm(_.cloneDeep(rowData), bool);
+#end      
   }
 #end
   // -------------- 导入导出 --------------

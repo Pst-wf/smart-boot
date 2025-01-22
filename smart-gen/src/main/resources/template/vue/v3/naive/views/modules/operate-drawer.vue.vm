@@ -220,8 +220,8 @@ watch(visible, () => {
 </script>
 
 <template>
-  <NModal v-model:show="visible" :title="title" preset="card" class="w-800px">
-    <NScrollbar class="h-480px pr-20px">
+  <NDrawer v-model:show="visible" display-directive="show" width="60%">
+    <NDrawerContent :title="title" :native-scrollbar="false" closable>
       <NForm ref="formRef" :model="model" :rules="rules" label-placement="left" :label-width="100">
         <NGrid responsive="screen" item-responsive>
 #foreach ($column in $formColumns)
@@ -347,14 +347,14 @@ watch(visible, () => {
 #end
         </NGrid>
       </NForm>
-    </NScrollbar>
-    <template #footer>
-      <NSpace justify="end" :size="16">
-        <NButton @click="close">{{ $t('common.cancel') }}</NButton>
-        <NButton v-if="operateType !== 'view'" type="primary" @click="submit()">{{ $t('common.confirm') }}</NButton>
-      </NSpace>
-    </template>
-  </NModal>
+      <template #footer>
+        <NSpace justify="end" :size="16">
+          <NButton @click="close">{{ $t('common.cancel') }}</NButton>
+          <NButton v-if="operateType !== 'view'" type="primary" @click="submit()">{{ $t('common.confirm') }}</NButton>
+        </NSpace>
+      </template>
+    </NDrawerContent>
+  </NDrawer>
 </template>
 
 <style scoped></style>

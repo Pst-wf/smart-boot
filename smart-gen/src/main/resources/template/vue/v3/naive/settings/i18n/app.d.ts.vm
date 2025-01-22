@@ -1,0 +1,53 @@
+#set($componentsType = ["INPUT", "INPUT-NUMBER", "TEXTAREA","SELECT", "CASCADER", "TREE-SELECT", "DATEPICKER", "TIMEPICKER", "FILE-UPLOAD"] )
+type Schema = {
+  page: {
+#if($hasMenu)
+    ${menu.routeName}: {
+      ${classname}: {
+        add${className}: string;
+        view${className}: string;
+        edit${className}: string;
+        title: string;
+#foreach($column in $i18n)
+        ${column.attrName}: string;
+#end
+        form: {
+#foreach($column in $i18nForm)
+#if($componentsType.contains($column.components))
+          ${column.attrName}: string;
+#if($column.components == 'DATEPICKER' &&  $column.queryType == 'BETWEEN')
+          ${column.attrName}Map: {
+            start: string;
+            end: string;
+          };
+#end
+#end
+#end
+        };
+      };
+    };
+#else
+    ${classname}: {
+      add${className}: string;
+      edit${className}: string;
+      title: string;
+#foreach($column in $i18n)
+      ${column.attrName}: string;
+#end
+      form: {
+#foreach($column in $i18nForm)
+#if($componentsType.contains($column.components))
+        ${column.attrName}: string;
+#if($column.components == 'DATEPICKER' &&  $column.queryType == 'BETWEEN')
+        ${column.attrName}Map: {
+          start: string;
+          end: string;
+        };
+#end
+#end
+#end
+      };
+    };
+#end
+  };
+};

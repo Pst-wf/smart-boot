@@ -68,7 +68,11 @@ public class GenConstant {
     /**
      * operate-modal.vue模板名称
      */
-    public static final String VIEWS_OPERATE = "operate-modal.vue.vm";
+    public static final String VIEWS_OPERATE_MODAL = "operate-modal.vue.vm";
+    /**
+     * operate-modal.vue模板名称
+     */
+    public static final String VIEWS_OPERATE_DRAWER = "operate-drawer.vue.vm";
     /**
      * search.vue模板名称
      */
@@ -91,18 +95,36 @@ public class GenConstant {
     public static final String ANT_API = "api.js.vm";
     public static final String ANT_COLUMNS = "columns.js.vm";
     public static final String ANT_VIEWS_VUE = "index.vue.vm";
-    public static final String ANT_VIEWS_OPERATE = "operate-modal.vue.vm";
+    public static final String ANT_VIEWS_OPERATE_MODAL = "operate-modal.vue.vm";
+    public static final String ANT_VIEWS_OPERATE_DRAWER = "operate-drawer.vue.vm";
 
+    /**
+     * 类型
+     */
+    public static final String KEY_OPTION_GEN_TYPE = "genType";
     /**
      * 全部
      */
-    public static final String OPTION_1 = "1";
+    public static final String OPTION_GEN_TYPE_1 = "1";
     /**
      * api
      */
-    public static final String OPTION_2 = "2";
+    public static final String OPTION_GEN_TYPE_2 = "2";
     /**
      * 接口
      */
-    public static final String OPTION_3 = "3";
+    public static final String OPTION_GEN_TYPE_3 = "3";
+    /**
+     * 表单类型
+     */
+    public static final String KEY_OPTION_FORM_TYPE = "formType";
+
+    /**
+     * api
+     */
+    public static final String OPTION_FORM_TYPE_MODAL = "modal";
+    /**
+     * 接口
+     */
+    public static final String OPTION_FORM_TYPE_DRAWER = "drawer";
 }

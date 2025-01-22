@@ -18,7 +18,11 @@ import { exportFile } from '@/utils/exportFile';
 import { dict } from '@/utils/dict';
 import { flatArray } from '@/utils/common';
 #end
+#if($isModal)
 import ${className}OperateModal from './modules/${vueFileName}-operate-modal.vue';
+#else
+import ${className}OperateDrawer from './modules/${vueFileName}-operate-drawer.vue';
+#end
 import ${className}Search from './modules/${vueFileName}-search.vue';
 
 const appStore = useAppStore();
@@ -317,7 +321,11 @@ init();
           class="sm:h-full"
           @update:sorter="updateSort"
       />
+#if($isModal)
       <${className}OperateModal
+#else
+      <${className}OperateDrawer
+#end
           v-model:visible="visible"
           :operate-type="operateType"
           :row-data="editingData"

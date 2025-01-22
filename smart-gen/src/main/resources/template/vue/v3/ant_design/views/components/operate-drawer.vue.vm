@@ -1,11 +1,11 @@
 <template>
-  <a-modal
-      :open="visible"
-      :title="disabled ? '查看' : form.id ? '编辑' : '新增'"
+  <a-drawer
+      :body-style="{ paddingBottom: '80px' }"
       :maskClosable="true"
+      :title="disabled ? '查看' : form.id ? '编辑' : '新增'"
+      :open="visible"
       :width="960"
-      centered
-      @cancel="onClose"
+      @close="onClose"
   >
     <a-form ref="formRef" :labelCol="{ span: 4 }" :labelWrap="true" :model="form" :rules="rules" :disabled="disabled">
 #foreach($column in $formColumns)
@@ -119,11 +119,11 @@
       </a-form-item>
 #end
     </a-form>
-    <template #footer>
-      <a-button style="margin-right: 8px" @click="onClose">取消</a-button>
+    <div class="footer">
+      <a-button style="margin-right: 8px" @click="onClose">关闭</a-button>
       <a-button v-if="!disabled" style="margin-right: 8px" type="primary" @click="submit()">提交</a-button>
-    </template>
-  </a-modal>
+    </div>
+  </a-drawer>
 </template>
 <script setup>
   import {message} from 'ant-design-vue';

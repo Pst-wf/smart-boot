@@ -1,6 +1,7 @@
 package com.smart.gen.utils;
 
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSONObject;
 import com.smart.common.utils.ObjectUtil;
 import com.smart.common.utils.StringUtil;
 import com.smart.entity.gen.GenTableColumnEntity;
@@ -24,6 +25,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import static com.smart.gen.constant.GenConstant.*;
+import static com.smart.gen.constant.GenConstant.VIEWS_OPERATE_DRAWER;
 
 /**
  * 代码生成器   工具类
@@ -32,6 +34,9 @@ import static com.smart.gen.constant.GenConstant.*;
  * @since 2022-07-26 00:00:00
  */
 public class GenUtils {
+    /**
+     * 数字类型
+     */
     private static final String[] NUMBER_TYPES = {"Integer", "Long", "Float", "Double", "BigDecimal"};
 
     /**
@@ -40,9 +45,11 @@ public class GenUtils {
      * @param option 获取模板参数 （1 全部; 2 API; 3 接口）
      * @return List
      */
-    public static List<String> getTemplates(String option) {
+    public static List<String> getTemplates(JSONObject option) {
+        String genType = option.getString(KEY_OPTION_GEN_TYPE);
+        String formType = option.getString(KEY_OPTION_FORM_TYPE);
         List<String> templates = new ArrayList<>();
-        if (StringUtil.notBlankAndEquals(option, OPTION_3)) {
+        if (StringUtil.notBlankAndEquals(genType, OPTION_GEN_TYPE_3)) {
             // 接口
             templates.add("template/java/entity/Entity.java.vm");
             templates.add("template/java/dao/Dao.xml.vm");
@@ -50,7 +57,7 @@ public class GenUtils {
             templates.add("template/java/service/ServiceImpl.java.vm");
             templates.add("template/java/dao/Dao.java.vm");
             templates.add("template/java/controller/Controller.java.vm");
-        } else if (StringUtil.notBlankAndEquals(option, OPTION_2)) {
+        } else if (StringUtil.notBlankAndEquals(genType, OPTION_GEN_TYPE_2)) {
             // API
             templates.add("template/java/entity/Entity.java.vm");
             templates.add("template/java/dao/Dao.xml.vm");
@@ -70,17 +77,25 @@ public class GenUtils {
 //            templates.add("template/vue/v2/views/form.vue.vm");
 //            templates.add("template/vue/v2/api/api.js.vm");
             // Naive vue
-//            templates.add("template/vue/v3/naive/typings/index.d.ts.vm");
-//            templates.add("template/vue/v3/naive/service/index.ts.vm");
-//            templates.add("template/vue/v3/naive/views/index.vue.vm");
-//            templates.add("template/vue/v3/naive/views/modules/operate-modal.vue.vm");
-//            templates.add("template/vue/v3/naive/views/modules/search.vue.vm");
-//            templates.add("template/vue/v3/naive/settings/i18n/app.d.ts.vm");
-//            templates.add("template/vue/v3/naive/settings/i18n/en-us.ts.vm");
-//            templates.add("template/vue/v3/naive/settings/i18n/zh-cn.ts.vm");
+            templates.add("template/vue/v3/naive/typings/index.d.ts.vm");
+            templates.add("template/vue/v3/naive/service/index.ts.vm");
+            templates.add("template/vue/v3/naive/views/index.vue.vm");
+            if (StringUtil.notBlankAndEquals(formType, OPTION_FORM_TYPE_DRAWER)) {
+                templates.add("template/vue/v3/naive/views/modules/operate-drawer.vue.vm");
+            } else {
+                templates.add("template/vue/v3/naive/views/modules/operate-modal.vue.vm");
+            }
+            templates.add("template/vue/v3/naive/views/modules/search.vue.vm");
+            templates.add("template/vue/v3/naive/settings/i18n/app.d.ts.vm");
+            templates.add("template/vue/v3/naive/settings/i18n/en-us.ts.vm");
+            templates.add("template/vue/v3/naive/settings/i18n/zh-cn.ts.vm");
             // Ant Design vue3
             templates.add("template/vue/v3/ant_design/views/index.vue.vm");
-            templates.add("template/vue/v3/ant_design/views/components/operate-modal.vue.vm");
+            if (StringUtil.notBlankAndEquals(formType, OPTION_FORM_TYPE_DRAWER)) {
+                templates.add("template/vue/v3/ant_design/views/components/operate-drawer.vue.vm");
+            } else {
+                templates.add("template/vue/v3/ant_design/views/components/operate-modal.vue.vm");
+            }
             templates.add("template/vue/v3/ant_design/views/columns.js.vm");
             templates.add("template/vue/v3/ant_design/api/api.js.vm");
         }
@@ -169,6 +184,10 @@ public class GenUtils {
         boolean hasListImage = false;
         boolean hasFullRow = false;
         GenTableColumnEntity pk = null;
+        boolean isModal = true;
+        if (table.getOptions() != null && StringUtil.notBlankAndEquals(table.getOptions().getString(KEY_OPTION_FORM_TYPE), OPTION_FORM_TYPE_DRAWER)) {
+            isModal = false;
+        }
         // 校验项
         List<GenTableColumnEntity> validateColumns = new ArrayList<>();
         // 不校验的项
@@ -447,6 +466,7 @@ public class GenUtils {
         map.put("hasListImage", hasListImage);
         map.put("hasTreeSelect", hasTreeSelect);
         map.put("hasFullRow", hasFullRow);
+        map.put("isModal", isModal);
         map.put("hasList", hasList);
         map.put("mainPath", mainPath);
         map.put("package", table.getPackageName());
@@ -566,57 +586,57 @@ public class GenUtils {
         dao.put("children", new ArrayList<Map<String, Object>>());
         list.add(dao);
 
-//        // Naive vue
-//        Map<String, Object> vue = new LinkedHashMap<>();
-//        vue.put("id", "Naive Vue");
-//        vue.put("pId", "0");
-//        vue.put("label", "Naive Vue");
-//        vue.put("value", "Naive Vue");
-//        vue.put("suffix", "");
-//        vue.put("children", new ArrayList<Map<String, Object>>());
-//        list.add(vue);
-//        Map<String, Object> typings = new LinkedHashMap<>();
-//        typings.put("id", "typings");
-//        typings.put("pId", "Naive Vue");
-//        typings.put("label", "typings");
-//        typings.put("value", "typings");
-//        typings.put("children", new ArrayList<Map<String, Object>>());
-//        list.add(typings);
-//        Map<String, Object> api = new LinkedHashMap<>();
-//        api.put("id", "api");
-//        api.put("pId", "Naive Vue");
-//        api.put("label", "api");
-//        api.put("value", "api");
-//        api.put("children", new ArrayList<Map<String, Object>>());
-//        list.add(api);
-//        Map<String, Object> views = new LinkedHashMap<>();
-//        views.put("id", "views");
-//        views.put("pId", "Naive Vue");
-//        views.put("label", "views");
-//        views.put("value", "views");
-//        views.put("children", new ArrayList<Map<String, Object>>());
-//        list.add(views);
-//        Map<String, Object> settings = new LinkedHashMap<>();
-//        settings.put("id", "settings");
-//        settings.put("pId", "Naive Vue");
-//        settings.put("label", "settings");
-//        settings.put("value", "settings");
-//        settings.put("children", new ArrayList<Map<String, Object>>());
-//        list.add(settings);
-//        Map<String, Object> modules = new LinkedHashMap<>();
-//        modules.put("id", "modules");
-//        modules.put("pId", "views");
-//        modules.put("label", "modules");
-//        modules.put("value", "modules");
-//        modules.put("children", new ArrayList<Map<String, Object>>());
-//        list.add(modules);
-//        Map<String, Object> i18n = new LinkedHashMap<>();
-//        i18n.put("id", "i18n");
-//        i18n.put("pId", "settings");
-//        i18n.put("label", "i18n");
-//        i18n.put("value", "i18n");
-//        i18n.put("children", new ArrayList<Map<String, Object>>());
-//        list.add(i18n);
+        // Naive vue
+        Map<String, Object> vue = new LinkedHashMap<>();
+        vue.put("id", "Naive Vue");
+        vue.put("pId", "0");
+        vue.put("label", "Naive Vue");
+        vue.put("value", "Naive Vue");
+        vue.put("suffix", "");
+        vue.put("children", new ArrayList<Map<String, Object>>());
+        list.add(vue);
+        Map<String, Object> typings = new LinkedHashMap<>();
+        typings.put("id", "typings");
+        typings.put("pId", "Naive Vue");
+        typings.put("label", "typings");
+        typings.put("value", "typings");
+        typings.put("children", new ArrayList<Map<String, Object>>());
+        list.add(typings);
+        Map<String, Object> api = new LinkedHashMap<>();
+        api.put("id", "api");
+        api.put("pId", "Naive Vue");
+        api.put("label", "api");
+        api.put("value", "api");
+        api.put("children", new ArrayList<Map<String, Object>>());
+        list.add(api);
+        Map<String, Object> views = new LinkedHashMap<>();
+        views.put("id", "views");
+        views.put("pId", "Naive Vue");
+        views.put("label", "views");
+        views.put("value", "views");
+        views.put("children", new ArrayList<Map<String, Object>>());
+        list.add(views);
+        Map<String, Object> settings = new LinkedHashMap<>();
+        settings.put("id", "settings");
+        settings.put("pId", "Naive Vue");
+        settings.put("label", "settings");
+        settings.put("value", "settings");
+        settings.put("children", new ArrayList<Map<String, Object>>());
+        list.add(settings);
+        Map<String, Object> modules = new LinkedHashMap<>();
+        modules.put("id", "modules");
+        modules.put("pId", "views");
+        modules.put("label", "modules");
+        modules.put("value", "modules");
+        modules.put("children", new ArrayList<Map<String, Object>>());
+        list.add(modules);
+        Map<String, Object> i18n = new LinkedHashMap<>();
+        i18n.put("id", "i18n");
+        i18n.put("pId", "settings");
+        i18n.put("label", "i18n");
+        i18n.put("value", "i18n");
+        i18n.put("children", new ArrayList<Map<String, Object>>());
+        list.add(i18n);
 
         // ant-vue3
         Map<String, Object> antVue = new LinkedHashMap<>();
@@ -721,10 +741,17 @@ public class GenUtils {
                 dataMap.put("value", sw);
                 return dataMap;
             }
-            if (template.contains(ANT_VIEWS_OPERATE)) {
-                dataMap.put("id", ANT_MARK + "_" + ANT_VIEWS_OPERATE);
+            if (template.contains(ANT_VIEWS_OPERATE_MODAL)) {
+                dataMap.put("id", ANT_MARK + "_" + ANT_VIEWS_OPERATE_MODAL);
                 dataMap.put("pId", "antComponents");
                 dataMap.put("label", "operate-modal.vue");
+                dataMap.put("value", sw);
+                return dataMap;
+            }
+            if (template.contains(ANT_VIEWS_OPERATE_DRAWER)) {
+                dataMap.put("id", ANT_MARK + "_" + ANT_VIEWS_OPERATE_DRAWER);
+                dataMap.put("pId", "antComponents");
+                dataMap.put("label", "operate-drawer.vue");
                 dataMap.put("value", sw);
                 return dataMap;
             }
@@ -766,12 +793,21 @@ public class GenUtils {
                 dataMap.put("value", sw);
                 return dataMap;
             }
-            if (template.contains(VIEWS_OPERATE)) {
-                dataMap.put("id", VIEWS_OPERATE);
+            if (template.contains(VIEWS_OPERATE_MODAL)) {
+                dataMap.put("id", VIEWS_OPERATE_MODAL);
                 dataMap.put("pId", "modules");
                 String underlineCase = StrUtil.toUnderlineCase(table.getClassName());
                 String replace = underlineCase.replace("_", "-");
                 dataMap.put("label", replace + "-operate-modal.vue");
+                dataMap.put("value", sw);
+                return dataMap;
+            }
+            if (template.contains(VIEWS_OPERATE_DRAWER)) {
+                dataMap.put("id", VIEWS_OPERATE_DRAWER);
+                dataMap.put("pId", "modules");
+                String underlineCase = StrUtil.toUnderlineCase(table.getClassName());
+                String replace = underlineCase.replace("_", "-");
+                dataMap.put("label", replace + "-operate-drawer.vue");
                 dataMap.put("value", sw);
                 return dataMap;
             }
@@ -922,10 +958,12 @@ public class GenUtils {
                 return ant3Path + "views" + File.separator + dir + File.separator + "index.vue";
             }
 
-            if (template.contains(ANT_VIEWS_OPERATE)) {
+            if (template.contains(ANT_VIEWS_OPERATE_MODAL)) {
                 return ant3Path + "views" + File.separator + dir + File.separator + "components" + File.separator + "operate-modal.vue";
             }
-
+            if (template.contains(ANT_VIEWS_OPERATE_DRAWER)) {
+                return ant3Path + "views" + File.separator + dir + File.separator + "components" + File.separator + "operate-drawer.vue";
+            }
         } else {
             // Naive vue
             String underlineCase = StrUtil.toUnderlineCase(table.getClassName());
@@ -944,8 +982,12 @@ public class GenUtils {
                 return naivePath + "views" + File.separator + dir + File.separator + "index.vue";
             }
 
-            if (template.contains(VIEWS_OPERATE)) {
+            if (template.contains(VIEWS_OPERATE_MODAL)) {
                 return naivePath + "views" + File.separator + dir + File.separator + "modules" + File.separator + res + "-operate-modal.vue";
+            }
+
+            if (template.contains(VIEWS_OPERATE_DRAWER)) {
+                return naivePath + "views" + File.separator + dir + File.separator + "modules" + File.separator + res + "-operate-drawer.vue";
             }
 
             if (template.contains(VIEWS_SEARCH)) {
