@@ -52,6 +52,7 @@ public class GenConstant {
     public static final String API_JS = "api.js.vm";
 
     /* *************************** Naive Vue *************************** */
+    public static final String NAIVE_MARK = "naive";
     /**
      * index.ts模板名称
      */
@@ -115,16 +116,35 @@ public class GenConstant {
      */
     public static final String OPTION_GEN_TYPE_3 = "3";
     /**
+     * 列表类型
+     */
+    public static final String KEY_OPTION_TABLE_TYPE = "tableType";
+    /**
+     * 分页
+     */
+    public static final String OPTION_TABLE_TYPE_PAGE = "page";
+    /**
+     * 不分页
+     */
+    public static final String OPTION_TABLE_TYPE_LIST = "list";
+    /**
      * 表单类型
      */
     public static final String KEY_OPTION_FORM_TYPE = "formType";
-
     /**
-     * api
+     * 弹窗
      */
     public static final String OPTION_FORM_TYPE_MODAL = "modal";
     /**
-     * 接口
+     * 抽屉
      */
     public static final String OPTION_FORM_TYPE_DRAWER = "drawer";
+    /**
+     * java 目录
+     */
+    public static final String OPTION_JAVA_PATH = "javaPath";
+    /**
+     * vue 目录
+     */
+    public static final String OPTION_VUE_PATH = "vuePath";
 }

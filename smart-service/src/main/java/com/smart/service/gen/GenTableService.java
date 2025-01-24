@@ -18,10 +18,17 @@ public interface GenTableService extends BaseService<GenTableEntity> {
     /**
      * 生成代码
      *
-     * @param ids 要生成的表的IDS
+     * @param entity 参数
      * @return byte[]
      */
-    byte[] generatorCode(List<String> ids);
+    byte[] generatorCode(GenTableEntity entity);
+
+    /**
+     * 生成代码到指定目录
+     *
+     * @param id 要生成的表的ID
+     */
+    void generatorCodeInFile(String id);
 
     /**
      * 获取所有表信息
@@ -33,9 +40,17 @@ public interface GenTableService extends BaseService<GenTableEntity> {
     /**
      * 预览
      *
-     * @param id 要生成的表的ID
+     * @param id        要生成的表的ID
+     * @param frontType 前端类型
      * @return List
      */
-    List<Map<String, Object>> previewCode(String id);
+    List<Map<String, Object>> previewCode(String id, String frontType);
+
+    /**
+     * 获取JAVA工程根目录
+     *
+     * @return String
+     */
+    String getWorkSpace();
 }
 

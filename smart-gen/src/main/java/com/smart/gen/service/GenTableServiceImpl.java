@@ -47,8 +47,15 @@ public class GenTableServiceImpl extends BaseServiceImpl<GenTableDao, GenTableEn
     @Autowired
     MenuService menuService;
 
+    /**
+     * 生成代码
+     *
+     * @param entity 参数
+     * @return byte[]
+     */
     @Override
-    public byte[] generatorCode(List<String> ids) {
+    public byte[] generatorCode(GenTableEntity entity) {
+        List<String> ids = entity.getSelectIds();
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         ZipOutputStream zip = new ZipOutputStream(outputStream);
         for (String id : ids) {
@@ -57,6 +64,7 @@ public class GenTableServiceImpl extends BaseServiceImpl<GenTableDao, GenTableEn
             if (table == null) {
                 throw new SmartException("表不存在");
             }
+            table.setFrontType(entity.getFrontType());
             //查询列信息
             List<GenTableColumnEntity> columns = genTableColumnDao.selectList(new LambdaQueryWrapper<GenTableColumnEntity>().eq(GenTableColumnEntity::getTableId, table.getId()).orderByAsc(GenTableColumnEntity::getColumnSort));
             if (StringUtil.isNotBlank(table.getMenuId())) {
@@ -67,6 +75,26 @@ public class GenTableServiceImpl extends BaseServiceImpl<GenTableDao, GenTableEn
         }
         IOUtils.closeQuietly(zip);
         return outputStream.toByteArray();
+    }
+
+    /**
+     * 生成代码到指定目录
+     *
+     * @param id 要生成的表的ID
+     */
+    @Override
+    public void generatorCodeInFile(String id) {
+        //查询表信息
+        GenTableEntity table = baseMapper.selectById(id);
+        if (table == null) {
+            throw new SmartException("表不存在");
+        }
+        //查询列信息
+        List<GenTableColumnEntity> columns = genTableColumnDao.selectList(new LambdaQueryWrapper<GenTableColumnEntity>().eq(GenTableColumnEntity::getTableId, table.getId()).orderByAsc(GenTableColumnEntity::getColumnSort));
+        if (StringUtil.isNotBlank(table.getMenuId())) {
+            table.setMenu(menuService.getById(table.getMenuId()));
+        }
+        GenUtils.generatorCodeInFile(table, columns);
     }
 
     @Override
@@ -121,22 +149,28 @@ public class GenTableServiceImpl extends BaseServiceImpl<GenTableDao, GenTableEn
             });
             genTableColumnService.updateBatchById(entity.getColumns());
         }
+        if (entity.getGenerateStatus() != null && entity.getGenerateStatus()) {
+            // 生成代码
+            GenUtils.generatorCodeInFile(entity, entity.getColumns());
+        }
     }
 
 
     /**
      * 预览代码
      *
-     * @param id 表编号
+     * @param id        表编号
+     * @param frontType 前端类型
      * @return List
      */
     @Override
-    public List<Map<String, Object>> previewCode(String id) {
+    public List<Map<String, Object>> previewCode(String id, String frontType) {
         //查询表信息
         GenTableEntity table = baseMapper.selectById(id);
         if (table == null) {
             throw new SmartException("表不存在");
         }
+        table.setFrontType(frontType);
         //查询列信息
         List<GenTableColumnEntity> columns = genTableColumnDao.selectList(new LambdaQueryWrapper<GenTableColumnEntity>().eq(GenTableColumnEntity::getTableId, table.getId()).orderByAsc(GenTableColumnEntity::getColumnSort));
         if (StringUtil.isNotBlank(table.getMenuId())) {
@@ -144,5 +178,15 @@ public class GenTableServiceImpl extends BaseServiceImpl<GenTableDao, GenTableEn
         }
         List<Map<String, Object>> maps = GenUtils.previewCode(table, columns);
         return TreeUtil.buildTreeMap(maps, "id", "pId");
+    }
+
+    /**
+     * 获取JAVA工程根目录
+     *
+     * @return String
+     */
+    @Override
+    public String getWorkSpace() {
+        return System.getProperty("user.dir");
     }
 }

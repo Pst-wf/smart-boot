@@ -107,7 +107,7 @@ public class GenTableController {
      */
     @PostMapping("/code")
     public void code(@RequestBody GenTableEntity genTableEntity, HttpServletResponse response) throws IOException {
-        byte[] data = genTableService.generatorCode(genTableEntity.getSelectIds());
+        byte[] data = genTableService.generatorCode(genTableEntity);
         response.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
         response.setHeader("Content-Disposition", "attachment; filename=\"smart_code.zip\"");
         response.addHeader("Content-Length", "" + data.length);
@@ -116,13 +116,33 @@ public class GenTableController {
     }
 
     /**
+     * 生成代码到指定目录
+     *
+     * @param genTableEntity 要生成的表bean
+     */
+    @PostMapping("/generatorCodeInFile")
+    public String generatorCodeInFile(@RequestBody GenTableEntity genTableEntity) {
+        genTableService.generatorCodeInFile(genTableEntity.getId());
+        return Result.success();
+    }
+
+    /**
      * 获取所有表信息
      *
      * @return String
      */
     @GetMapping("/previewCode")
-    public String previewCode(@RequestParam String id) {
-        return Result.data(genTableService.previewCode(id));
+    public String previewCode(@RequestParam("id") String id, @RequestParam("frontType") String frontType) {
+        return Result.data(genTableService.previewCode(id, frontType));
     }
 
+    /**
+     * 获取JAVA工程根目录
+     *
+     * @return String
+     */
+    @GetMapping("/getWorkSpace")
+    public String getWorkSpace() {
+        return Result.data(genTableService.getWorkSpace());
+    }
 }

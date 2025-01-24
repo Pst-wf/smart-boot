@@ -18,14 +18,16 @@ import org.apache.velocity.app.Velocity;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import static com.smart.gen.constant.GenConstant.*;
-import static com.smart.gen.constant.GenConstant.VIEWS_OPERATE_DRAWER;
 
 /**
  * 代码生成器   工具类
@@ -42,10 +44,11 @@ public class GenUtils {
     /**
      * 获取模板
      *
-     * @param option 获取模板参数 （1 全部; 2 API; 3 接口）
+     * @param option    获取模板参数 （1 全部; 2 API; 3 接口）
+     * @param frontType 前端类型 不传则包含全部
      * @return List
      */
-    public static List<String> getTemplates(JSONObject option) {
+    public static List<String> getTemplates(JSONObject option, String frontType) {
         String genType = option.getString(KEY_OPTION_GEN_TYPE);
         String formType = option.getString(KEY_OPTION_FORM_TYPE);
         List<String> templates = new ArrayList<>();
@@ -76,28 +79,32 @@ public class GenUtils {
 //            templates.add("template/vue/v2/views/list.vue.vm");
 //            templates.add("template/vue/v2/views/form.vue.vm");
 //            templates.add("template/vue/v2/api/api.js.vm");
-            // Naive vue
-            templates.add("template/vue/v3/naive/typings/index.d.ts.vm");
-            templates.add("template/vue/v3/naive/service/index.ts.vm");
-            templates.add("template/vue/v3/naive/views/index.vue.vm");
-            if (StringUtil.notBlankAndEquals(formType, OPTION_FORM_TYPE_DRAWER)) {
-                templates.add("template/vue/v3/naive/views/modules/operate-drawer.vue.vm");
-            } else {
-                templates.add("template/vue/v3/naive/views/modules/operate-modal.vue.vm");
+            if (StringUtil.notBlankAndEquals(frontType, NAIVE_MARK) || StringUtil.isBlank(frontType)) {
+                // Naive vue
+                templates.add("template/vue/v3/naive/typings/index.d.ts.vm");
+                templates.add("template/vue/v3/naive/service/index.ts.vm");
+                templates.add("template/vue/v3/naive/views/index.vue.vm");
+                if (StringUtil.notBlankAndEquals(formType, OPTION_FORM_TYPE_DRAWER)) {
+                    templates.add("template/vue/v3/naive/views/modules/operate-drawer.vue.vm");
+                } else {
+                    templates.add("template/vue/v3/naive/views/modules/operate-modal.vue.vm");
+                }
+                templates.add("template/vue/v3/naive/views/modules/search.vue.vm");
+                templates.add("template/vue/v3/naive/settings/i18n/app.d.ts.vm");
+                templates.add("template/vue/v3/naive/settings/i18n/en-us.ts.vm");
+                templates.add("template/vue/v3/naive/settings/i18n/zh-cn.ts.vm");
             }
-            templates.add("template/vue/v3/naive/views/modules/search.vue.vm");
-            templates.add("template/vue/v3/naive/settings/i18n/app.d.ts.vm");
-            templates.add("template/vue/v3/naive/settings/i18n/en-us.ts.vm");
-            templates.add("template/vue/v3/naive/settings/i18n/zh-cn.ts.vm");
-            // Ant Design vue3
-            templates.add("template/vue/v3/ant_design/views/index.vue.vm");
-            if (StringUtil.notBlankAndEquals(formType, OPTION_FORM_TYPE_DRAWER)) {
-                templates.add("template/vue/v3/ant_design/views/components/operate-drawer.vue.vm");
-            } else {
-                templates.add("template/vue/v3/ant_design/views/components/operate-modal.vue.vm");
+            if (StringUtil.notBlankAndEquals(frontType, ANT_MARK) || StringUtil.isBlank(frontType)) {
+                // Ant Design vue3
+                templates.add("template/vue/v3/ant_design/views/index.vue.vm");
+                if (StringUtil.notBlankAndEquals(formType, OPTION_FORM_TYPE_DRAWER)) {
+                    templates.add("template/vue/v3/ant_design/views/components/operate-drawer.vue.vm");
+                } else {
+                    templates.add("template/vue/v3/ant_design/views/components/operate-modal.vue.vm");
+                }
+                templates.add("template/vue/v3/ant_design/views/columns.js.vm");
+                templates.add("template/vue/v3/ant_design/api/api.js.vm");
             }
-            templates.add("template/vue/v3/ant_design/views/columns.js.vm");
-            templates.add("template/vue/v3/ant_design/api/api.js.vm");
         }
         return templates;
     }
@@ -112,7 +119,7 @@ public class GenUtils {
     public static void generatorCode(GenTableEntity table, List<GenTableColumnEntity> columns, ZipOutputStream zip) {
         VelocityContext context = initVelocityContext(table, columns);
         //获取模板列表
-        List<String> templates = getTemplates(table.getOptions());
+        List<String> templates = getTemplates(table.getOptions(), table.getFrontType());
         for (String template : templates) {
             //渲染模板
             StringWriter sw = new StringWriter();
@@ -121,7 +128,7 @@ public class GenUtils {
 
             try {
                 //添加到zip
-                String fileName = getFileName(template, table);
+                String fileName = getFileName(template, table, false);
                 if (StringUtil.isNotBlank(fileName)) {
                     zip.putNextEntry(new ZipEntry(fileName));
                     IOUtils.write(sw.toString(), zip, "UTF-8");
@@ -135,7 +142,58 @@ public class GenUtils {
     }
 
     /**
-     * 生成代码
+     * 生成代码到指定目录
+     *
+     * @param table   表bean
+     * @param columns 字段List
+     */
+    public static void generatorCodeInFile(GenTableEntity table, List<GenTableColumnEntity> columns) {
+        VelocityContext context = initVelocityContext(table, columns);
+        //获取模板列表
+        List<String> templates = getTemplates(table.getOptions(), table.getFrontType());
+        for (String template : templates) {
+            //渲染模板
+            StringWriter sw = new StringWriter();
+            Template tpl = Velocity.getTemplate(template, "UTF-8");
+            tpl.merge(context, sw);
+
+            String fileName = getFileName(template, table, true);
+            if (StringUtil.isNotBlank(fileName)) {
+                System.out.println(fileName);
+                File file = new File(fileName);
+                File parentFile = file.getParentFile();
+                if (!parentFile.exists() && !parentFile.mkdirs()) {
+                    throw new SmartException(parentFile.getAbsolutePath() + "创建出错！");
+                }
+                try {
+                    if (!file.exists() && !file.createNewFile()) {
+                        throw new SmartException(fileName + "创建出错！");
+                    }
+                    if (file.isDirectory()) {
+                        if (!file.delete()) {
+                            throw new SmartException(fileName + "创建出错！");
+                        }
+                        if (!file.createNewFile()) {
+                            throw new SmartException(fileName + "创建出错！");
+                        }
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                try (OutputStream outputStream = Files.newOutputStream(Paths.get(fileName))) {
+                    // 写入字符串，默认字符集
+                    IOUtils.write(sw.toString(), outputStream, "UTF-8");
+                    // 别忘了刷新和关闭流
+                    outputStream.flush();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }
+
+    /**
+     * 预览
      *
      * @param table   表bean
      * @param columns 字段List
@@ -143,9 +201,9 @@ public class GenUtils {
     public static List<Map<String, Object>> previewCode(GenTableEntity table, List<GenTableColumnEntity> columns) {
         VelocityContext context = initVelocityContext(table, columns);
         //获取模板列表
-        List<String> templates = getTemplates(table.getOptions());
+        List<String> templates = getTemplates(table.getOptions(), table.getFrontType());
 
-        List<Map<String, Object>> list = getDefault();
+        List<Map<String, Object>> list = getDefault(table.getFrontType());
         for (String template : templates) {
             //渲染模板
             StringWriter sw = new StringWriter();
@@ -187,6 +245,10 @@ public class GenUtils {
         boolean isModal = true;
         if (table.getOptions() != null && StringUtil.notBlankAndEquals(table.getOptions().getString(KEY_OPTION_FORM_TYPE), OPTION_FORM_TYPE_DRAWER)) {
             isModal = false;
+        }
+        boolean isPage = true;
+        if (table.getOptions() != null && StringUtil.notBlankAndEquals(table.getOptions().getString(KEY_OPTION_TABLE_TYPE), OPTION_TABLE_TYPE_LIST)) {
+            isPage = false;
         }
         // 校验项
         List<GenTableColumnEntity> validateColumns = new ArrayList<>();
@@ -467,6 +529,7 @@ public class GenUtils {
         map.put("hasTreeSelect", hasTreeSelect);
         map.put("hasFullRow", hasFullRow);
         map.put("isModal", isModal);
+        map.put("isPage", isPage);
         map.put("hasList", hasList);
         map.put("mainPath", mainPath);
         map.put("package", table.getPackageName());
@@ -544,9 +607,10 @@ public class GenUtils {
     /**
      * 获取默认路径
      *
+     * @param frontType 前端类型
      * @return List
      */
-    private static List<Map<String, Object>> getDefault() {
+    private static List<Map<String, Object>> getDefault(String frontType) {
         List<Map<String, Object>> list = new ArrayList<>();
         Map<String, Object> java = new LinkedHashMap<>();
         java.put("id", "Java");
@@ -585,92 +649,94 @@ public class GenUtils {
         dao.put("value", "dao");
         dao.put("children", new ArrayList<Map<String, Object>>());
         list.add(dao);
+        if (StringUtil.notBlankAndEquals(frontType, NAIVE_MARK) || StringUtil.isBlank(frontType)) {
+            // Naive vue
+            Map<String, Object> vue = new LinkedHashMap<>();
+            vue.put("id", "Naive Vue");
+            vue.put("pId", "0");
+            vue.put("label", "Naive Vue");
+            vue.put("value", "Naive Vue");
+            vue.put("suffix", "");
+            vue.put("children", new ArrayList<Map<String, Object>>());
+            list.add(vue);
+            Map<String, Object> typings = new LinkedHashMap<>();
+            typings.put("id", "typings");
+            typings.put("pId", "Naive Vue");
+            typings.put("label", "typings");
+            typings.put("value", "typings");
+            typings.put("children", new ArrayList<Map<String, Object>>());
+            list.add(typings);
+            Map<String, Object> api = new LinkedHashMap<>();
+            api.put("id", "api");
+            api.put("pId", "Naive Vue");
+            api.put("label", "api");
+            api.put("value", "api");
+            api.put("children", new ArrayList<Map<String, Object>>());
+            list.add(api);
+            Map<String, Object> views = new LinkedHashMap<>();
+            views.put("id", "views");
+            views.put("pId", "Naive Vue");
+            views.put("label", "views");
+            views.put("value", "views");
+            views.put("children", new ArrayList<Map<String, Object>>());
+            list.add(views);
+            Map<String, Object> settings = new LinkedHashMap<>();
+            settings.put("id", "settings");
+            settings.put("pId", "Naive Vue");
+            settings.put("label", "settings");
+            settings.put("value", "settings");
+            settings.put("children", new ArrayList<Map<String, Object>>());
+            list.add(settings);
+            Map<String, Object> modules = new LinkedHashMap<>();
+            modules.put("id", "modules");
+            modules.put("pId", "views");
+            modules.put("label", "modules");
+            modules.put("value", "modules");
+            modules.put("children", new ArrayList<Map<String, Object>>());
+            list.add(modules);
+            Map<String, Object> i18n = new LinkedHashMap<>();
+            i18n.put("id", "i18n");
+            i18n.put("pId", "settings");
+            i18n.put("label", "i18n");
+            i18n.put("value", "i18n");
+            i18n.put("children", new ArrayList<Map<String, Object>>());
+            list.add(i18n);
+        }
+        if (StringUtil.notBlankAndEquals(frontType, ANT_MARK) || StringUtil.isBlank(frontType)) {
+            // ant-vue3
+            Map<String, Object> antVue = new LinkedHashMap<>();
+            antVue.put("id", "Ant Design Vue3");
+            antVue.put("pId", "0");
+            antVue.put("label", "Ant Design Vue3");
+            antVue.put("value", "Ant Design Vue3");
+            antVue.put("suffix", "");
+            antVue.put("children", new ArrayList<Map<String, Object>>());
+            list.add(antVue);
 
-        // Naive vue
-        Map<String, Object> vue = new LinkedHashMap<>();
-        vue.put("id", "Naive Vue");
-        vue.put("pId", "0");
-        vue.put("label", "Naive Vue");
-        vue.put("value", "Naive Vue");
-        vue.put("suffix", "");
-        vue.put("children", new ArrayList<Map<String, Object>>());
-        list.add(vue);
-        Map<String, Object> typings = new LinkedHashMap<>();
-        typings.put("id", "typings");
-        typings.put("pId", "Naive Vue");
-        typings.put("label", "typings");
-        typings.put("value", "typings");
-        typings.put("children", new ArrayList<Map<String, Object>>());
-        list.add(typings);
-        Map<String, Object> api = new LinkedHashMap<>();
-        api.put("id", "api");
-        api.put("pId", "Naive Vue");
-        api.put("label", "api");
-        api.put("value", "api");
-        api.put("children", new ArrayList<Map<String, Object>>());
-        list.add(api);
-        Map<String, Object> views = new LinkedHashMap<>();
-        views.put("id", "views");
-        views.put("pId", "Naive Vue");
-        views.put("label", "views");
-        views.put("value", "views");
-        views.put("children", new ArrayList<Map<String, Object>>());
-        list.add(views);
-        Map<String, Object> settings = new LinkedHashMap<>();
-        settings.put("id", "settings");
-        settings.put("pId", "Naive Vue");
-        settings.put("label", "settings");
-        settings.put("value", "settings");
-        settings.put("children", new ArrayList<Map<String, Object>>());
-        list.add(settings);
-        Map<String, Object> modules = new LinkedHashMap<>();
-        modules.put("id", "modules");
-        modules.put("pId", "views");
-        modules.put("label", "modules");
-        modules.put("value", "modules");
-        modules.put("children", new ArrayList<Map<String, Object>>());
-        list.add(modules);
-        Map<String, Object> i18n = new LinkedHashMap<>();
-        i18n.put("id", "i18n");
-        i18n.put("pId", "settings");
-        i18n.put("label", "i18n");
-        i18n.put("value", "i18n");
-        i18n.put("children", new ArrayList<Map<String, Object>>());
-        list.add(i18n);
+            Map<String, Object> antApi = new LinkedHashMap<>();
+            antApi.put("id", "antApi");
+            antApi.put("pId", "Ant Design Vue3");
+            antApi.put("label", "api");
+            antApi.put("value", "api");
+            antApi.put("children", new ArrayList<Map<String, Object>>());
+            list.add(antApi);
 
-        // ant-vue3
-        Map<String, Object> antVue = new LinkedHashMap<>();
-        antVue.put("id", "Ant Design Vue3");
-        antVue.put("pId", "0");
-        antVue.put("label", "Ant Design Vue3");
-        antVue.put("value", "Ant Design Vue3");
-        antVue.put("suffix", "");
-        antVue.put("children", new ArrayList<Map<String, Object>>());
-        list.add(antVue);
+            Map<String, Object> antViews = new LinkedHashMap<>();
+            antViews.put("id", "antViews");
+            antViews.put("pId", "Ant Design Vue3");
+            antViews.put("label", "views");
+            antViews.put("value", "views");
+            antViews.put("children", new ArrayList<Map<String, Object>>());
+            list.add(antViews);
 
-        Map<String, Object> antApi = new LinkedHashMap<>();
-        antApi.put("id", "antApi");
-        antApi.put("pId", "Ant Design Vue3");
-        antApi.put("label", "api");
-        antApi.put("value", "api");
-        antApi.put("children", new ArrayList<Map<String, Object>>());
-        list.add(antApi);
-
-        Map<String, Object> antViews = new LinkedHashMap<>();
-        antViews.put("id", "antViews");
-        antViews.put("pId", "Ant Design Vue3");
-        antViews.put("label", "views");
-        antViews.put("value", "views");
-        antViews.put("children", new ArrayList<Map<String, Object>>());
-        list.add(antViews);
-
-        Map<String, Object> antComponents = new LinkedHashMap<>();
-        antComponents.put("id", "antComponents");
-        antComponents.put("pId", "antViews");
-        antComponents.put("label", "components");
-        antComponents.put("value", "components");
-        antComponents.put("children", new ArrayList<Map<String, Object>>());
-        list.add(antComponents);
+            Map<String, Object> antComponents = new LinkedHashMap<>();
+            antComponents.put("id", "antComponents");
+            antComponents.put("pId", "antViews");
+            antComponents.put("label", "components");
+            antComponents.put("value", "components");
+            antComponents.put("children", new ArrayList<Map<String, Object>>());
+            list.add(antComponents);
+        }
         return list;
 
     }
@@ -890,7 +956,7 @@ public class GenUtils {
     /**
      * 获取文件名
      */
-    public static String getFileName(String template, GenTableEntity table) {
+    public static String getFileName(String template, GenTableEntity table, boolean isGenerate) {
         String className = table.getClassName();
         String packageName = table.getPackageName();
         String moduleName = table.getModuleName();
@@ -906,6 +972,47 @@ public class GenUtils {
         String ant2Path = "ant design vue 2" + File.separator;
         String ant3Path = "ant design vue 3" + File.separator;
         String javaPath = "java" + File.separator;
+        if (isGenerate) {
+            String back = table.getOptions().getString(OPTION_JAVA_PATH);
+            String front = table.getOptions().getString(OPTION_VUE_PATH);
+            if (StringUtil.isBlank(back)) {
+                throw new SmartException("后端目录获取异常");
+            }
+            String replaceBack = back.replace("\\", File.separator);
+            if (!replaceBack.endsWith(File.separator)) {
+                replaceBack = replaceBack + File.separator;
+            }
+            javaPath = replaceBack;
+//            File backFile = new File(javaPath);
+//            if (!backFile.exists() && !backFile.mkdirs()) {
+//                throw new SmartException("后端目录创建出错！");
+//            }
+
+            if (StringUtil.isBlank(front)) {
+                throw new SmartException("前端目录获取异常");
+            }
+            String replaceFront = front.replace("\\", File.separator);
+            if (!replaceFront.endsWith(File.separator)) {
+                replaceFront = replaceFront + File.separator;
+            }
+            ant2Path = replaceFront + "src" + File.separator;
+            ant3Path = replaceFront + "src" + File.separator;
+            naivePath = replaceFront + "src" + File.separator;
+
+
+//            if (StringUtil.notBlankAndEquals(table.getFrontType(), NAIVE_MARK)) {
+//                File frontFile = new File(naivePath);
+//                if (!frontFile.exists() && !frontFile.mkdirs()) {
+//                    throw new SmartException("前端目录创建出错！");
+//                }
+//            }
+//            if (StringUtil.notBlankAndEquals(table.getFrontType(), ANT_MARK)) {
+//                File frontFile = new File(ant3Path);
+//                if (!frontFile.exists() && !frontFile.mkdirs()) {
+//                    throw new SmartException("前端目录创建出错！");
+//                }
+//            }
+        }
         if (template.contains(ENTITY_JAVA)) {
             return javaPath + entityPath + "entity" + File.separator + moduleName + File.separator + className + "Entity.java";
         }

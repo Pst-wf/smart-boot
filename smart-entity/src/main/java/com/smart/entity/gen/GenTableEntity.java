@@ -93,4 +93,17 @@ public class GenTableEntity extends BaseEntity {
     @JSONField(serialize = false)
     private List<GenTableColumnEntity> columns;
 
+    /**
+     * 生成代码
+     */
+    @TableField(exist = false)
+    @JSONField(serialize = false)
+    private Boolean generateStatus;
+
+    /**
+     * 前端类型
+     */
+    @TableField(exist = false)
+    @JSONField(serialize = false)
+    private String frontType;
 }

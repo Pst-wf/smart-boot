@@ -1,6 +1,7 @@
 package com.smart.system.controller;
 
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSONObject;
 import com.smart.aop.log.LogType;
 import com.smart.aop.log.SaveLog;
 import com.smart.aop.permission.HasPermission;
@@ -206,26 +207,65 @@ public class MenuController {
         // 权重
         menu.setWeight(MENU_WEIGHT_DEFAULT);
         List<ButtonsEntity> list = new ArrayList<>();
-        ButtonsEntity addButton = new ButtonsEntity();
-        addButton.setCode(className + ":add");
-        addButton.setName(genTable.getComments() + "新增");
-        ButtonsEntity updateButton = new ButtonsEntity();
-        updateButton.setCode(className + ":update");
-        updateButton.setName(genTable.getComments() + "修改");
-        ButtonsEntity deleteButton = new ButtonsEntity();
-        deleteButton.setCode(className + ":delete");
-        deleteButton.setName(genTable.getComments() + "删除");
-        ButtonsEntity exportButton = new ButtonsEntity();
-        exportButton.setCode(className + ":export");
-        exportButton.setName(genTable.getComments() + "导出");
-        ButtonsEntity importButton = new ButtonsEntity();
-        importButton.setCode(className + ":import");
-        importButton.setName(genTable.getComments() + "导入");
-        list.add(addButton);
-        list.add(updateButton);
-        list.add(deleteButton);
-        list.add(exportButton);
-        list.add(importButton);
+        boolean addStatus = true;
+        boolean updateStatus = true;
+        boolean deleteStatus = true;
+        boolean importStatus = true;
+        boolean exportStatus = true;
+        JSONObject options = genTable.getOptions();
+        if (options != null) {
+            Boolean addValue = options.getBoolean("addStatus");
+            Boolean updateValue = options.getBoolean("updateStatus");
+            Boolean deleteValue = options.getBoolean("deleteStatus");
+            Boolean importValue = options.getBoolean("importStatus");
+            Boolean exportValue = options.getBoolean("exportStatus");
+            if (addValue != null) {
+                addStatus = addValue;
+            }
+            if (updateValue != null) {
+                updateStatus = updateValue;
+            }
+            if (deleteValue != null) {
+                deleteStatus = deleteValue;
+            }
+            if (importValue != null) {
+                importStatus = importValue;
+            }
+            if (exportValue != null) {
+                exportStatus = exportValue;
+            }
+        }
+        if (addStatus) {
+            ButtonsEntity addButton = new ButtonsEntity();
+            addButton.setCode(className + ":add");
+            addButton.setName(genTable.getComments() + "新增");
+            list.add(addButton);
+        }
+        if (updateStatus) {
+            ButtonsEntity updateButton = new ButtonsEntity();
+            updateButton.setCode(className + ":update");
+            updateButton.setName(genTable.getComments() + "修改");
+            list.add(updateButton);
+        }
+        if (deleteStatus) {
+            ButtonsEntity deleteButton = new ButtonsEntity();
+            deleteButton.setCode(className + ":delete");
+            deleteButton.setName(genTable.getComments() + "删除");
+            list.add(deleteButton);
+        }
+        if (exportStatus) {
+            ButtonsEntity exportButton = new ButtonsEntity();
+            exportButton.setCode(className + ":export");
+            exportButton.setName(genTable.getComments() + "导出");
+            list.add(exportButton);
+        }
+        if (importStatus) {
+            ButtonsEntity importButton = new ButtonsEntity();
+            importButton.setCode(className + ":import");
+            importButton.setName(genTable.getComments() + "导入");
+            list.add(importButton);
+
+        }
         menu.setButtons(list);
         MenuEntity result = menuService.saveEntity(menu);
         return result != null ? Result.data(result) : Result.fail(ResultCode.FAIL);
