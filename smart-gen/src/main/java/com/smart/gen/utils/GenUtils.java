@@ -158,6 +158,7 @@ public class GenUtils {
             tpl.merge(context, sw);
 
             String fileName = getFileName(template, table, true);
+            System.out.println(fileName);
             if (StringUtil.isNotBlank(fileName)) {
                 System.out.println(fileName);
                 File file = new File(fileName);
