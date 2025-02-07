@@ -12,6 +12,7 @@ import com.smart.entity.system.IdentityEntity;
 import com.smart.entity.system.LoginLogEntity;
 import com.smart.entity.system.UserEntity;
 import com.smart.model.auth.LoginAuthRequest;
+import com.smart.model.exception.SmartException;
 import com.smart.model.response.r.Result;
 import com.smart.model.response.r.ResultCode;
 import com.smart.service.system.*;
@@ -20,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.exceptions.InvalidGrantException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
-import org.springframework.security.oauth2.common.exceptions.UserDeniedAuthorizationException;
 import org.springframework.security.oauth2.provider.endpoint.TokenEndpoint;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,7 +30,6 @@ import java.util.*;
 
 import static com.smart.common.constant.AuthConstant.*;
 import static com.smart.common.constant.SmartConstant.SYSTEM_ID;
-import static com.smart.model.response.r.MessageProperties.USER_NOT_FOUND;
 
 /**
  * 用户认证
@@ -148,7 +147,7 @@ public class OauthController {
     public String getUserInfo(HttpServletRequest request) {
         UserEntity user = userService.getUserWithIdentity(AuthUtil.getUserId());
         if (user == null) {
-            throw new UserDeniedAuthorizationException(USER_NOT_FOUND);
+            throw new SmartException(ResultCode.USER_NOT_FOUND);
         }
         List<IdentityEntity> identityList;
         if (user.getId().equals(SYSTEM_ID)) {

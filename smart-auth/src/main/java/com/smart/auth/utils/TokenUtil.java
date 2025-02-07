@@ -3,10 +3,11 @@ package com.smart.auth.utils;
 import com.smart.common.utils.AuthUtil;
 import com.smart.common.utils.StringUtil;
 import com.smart.entity.system.TenantEntity;
+import com.smart.model.exception.SmartException;
+import com.smart.model.response.r.ResultCode;
 import lombok.SneakyThrows;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.oauth2.common.exceptions.UnapprovedClientAuthenticationException;
-import org.springframework.security.oauth2.common.exceptions.UserDeniedAuthorizationException;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -15,8 +16,6 @@ import java.util.Date;
 
 import static com.smart.common.constant.TokenConstant.HEADER;
 import static com.smart.common.constant.TokenConstant.HEADER_PREFIX;
-import static com.smart.model.response.r.MessageProperties.USER_HAS_NO_TENANT;
-import static com.smart.model.response.r.MessageProperties.USER_HAS_NO_TENANT_PERMISSION;
 
 /**
  * 认证工具类
@@ -111,11 +110,11 @@ public class TokenUtil {
      */
     public static boolean judgeTenant(TenantEntity tenant) {
         if (tenant == null) {
-            throw new UserDeniedAuthorizationException(USER_HAS_NO_TENANT);
+            throw new SmartException(ResultCode.USER_HAS_NO_TENANT);
         }
         Date expireTime = tenant.getExpireTime();
         if (expireTime != null && expireTime.before(new Date())) {
-            throw new UserDeniedAuthorizationException(USER_HAS_NO_TENANT_PERMISSION);
+            throw new SmartException(ResultCode.USER_HAS_NO_TENANT_PERMISSION);
         }
         return false;
     }

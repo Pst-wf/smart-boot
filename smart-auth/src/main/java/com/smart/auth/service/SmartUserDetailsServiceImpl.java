@@ -26,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.oauth2.common.exceptions.UserDeniedAuthorizationException;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
@@ -38,7 +37,6 @@ import java.util.stream.Collectors;
 import static com.smart.common.constant.AuthConstant.*;
 import static com.smart.common.constant.SmartConstant.NO;
 import static com.smart.common.constant.SmartConstant.SYSTEM_ID;
-import static com.smart.model.response.r.MessageProperties.*;
 
 /**
  * 用户信息
@@ -75,13 +73,13 @@ public class SmartUserDetailsServiceImpl implements SmartUserDetailsService {
         // 获取租户ID
         String tenantId = request.getHeader(TENANT_HEADER_KEY);
         if (StringUtil.isBlank(tenantId)) {
-            throw new UserDeniedAuthorizationException(TENANT_NOT_FOUND);
+            throw new SmartException(ResultCode.TENANT_NOT_FOUND);
         }
         System.err.println("【登录的后台用户的tenantId: " + tenantId + "】");
         // 获取租户信息
         TenantEntity tenant = tenantService.getOne(new LambdaQueryWrapper<TenantEntity>().eq(TenantEntity::getTenantId, tenantId));
         if (TokenUtil.judgeTenant(tenant)) {
-            throw new UserDeniedAuthorizationException(USER_HAS_NO_TENANT_PERMISSION);
+            throw new SmartException(ResultCode.USER_HAS_NO_TENANT_PERMISSION);
         }
         if (StringUtil.isBlank(username)) {
             throw new SmartException("账号获取失败！");
@@ -120,13 +118,13 @@ public class SmartUserDetailsServiceImpl implements SmartUserDetailsService {
         // 获取租户ID
         String tenantId = request.getHeader(TENANT_HEADER_KEY);
         if (StringUtil.isBlank(tenantId)) {
-            throw new UserDeniedAuthorizationException(TENANT_NOT_FOUND);
+            throw new SmartException(ResultCode.TENANT_NOT_FOUND);
         }
         System.err.println("【登录的后台用户的tenantId: " + tenantId + "】");
         // 获取租户信息
         TenantEntity tenant = tenantService.getOne(new LambdaQueryWrapper<TenantEntity>().eq(TenantEntity::getTenantId, tenantId));
         if (TokenUtil.judgeTenant(tenant)) {
-            throw new UserDeniedAuthorizationException(USER_HAS_NO_TENANT_PERMISSION);
+            throw new SmartException(ResultCode.USER_HAS_NO_TENANT_PERMISSION);
         }
 
         if (StringUtil.isBlank(openId)) {
@@ -263,12 +261,12 @@ public class SmartUserDetailsServiceImpl implements SmartUserDetailsService {
         //根据用户名查询是否有用户
         FrontUserEntity user = frontUserService.getOne(new LambdaQueryWrapper<FrontUserEntity>().eq(FrontUserEntity::getUsername, username));
         if (user == null) {
-            throw new UserDeniedAuthorizationException(USER_NOT_FOUND);
+            throw new SmartException(ResultCode.USER_NOT_FOUND);
         }
         // 账号状态
         String userStatus = user.getUserStatus();
         if (StringUtil.notBlankAndEquals(userStatus, NO)) {
-            throw new UserDeniedAuthorizationException(USER_FROZEN);
+            throw new SmartException(ResultCode.USER_FROZEN);
         }
         return new SmartFrontUser(
                 user.getUsername(),
@@ -315,7 +313,7 @@ public class SmartUserDetailsServiceImpl implements SmartUserDetailsService {
         // 账号状态
         String userStatus = user.getUserStatus();
         if (StringUtil.notBlankAndEquals(userStatus, NO)) {
-            throw new UserDeniedAuthorizationException(USER_FROZEN);
+            throw new SmartException(ResultCode.USER_FROZEN);
         }
         List<IdentityEntity> identityList;
         if (SYSTEM_ID.equals(user.getId())) {
@@ -410,7 +408,7 @@ public class SmartUserDetailsServiceImpl implements SmartUserDetailsService {
         // 账号状态
         String userStatus = user.getUserStatus();
         if (StringUtil.notBlankAndEquals(userStatus, NO)) {
-            throw new UserDeniedAuthorizationException(USER_FROZEN);
+            throw new SmartException(ResultCode.USER_FROZEN);
         }
         return new SmartFrontUser(
                 user.getUsername(),
