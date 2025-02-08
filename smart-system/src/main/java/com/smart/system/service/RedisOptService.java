@@ -1,5 +1,6 @@
 package com.smart.system.service;
 
+import com.alibaba.fastjson.JSON;
 import com.smart.common.constant.SmartConstant;
 import com.smart.common.utils.ListUtil;
 import com.smart.common.utils.StringUtil;
@@ -14,10 +15,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -100,6 +98,9 @@ public class RedisOptService {
             redisModel.setName(key);
             redisModel.setDataType(dataType.code());
             redisModel.setValue(value);
+            if (value != null) {
+                redisModel.setClassName(value.getClass().getName());
+            }
             redisModel.setExpire(expire);
             return redisModel;
         }
@@ -112,11 +113,28 @@ public class RedisOptService {
      * @param redisModel 参数0
      */
     public void saveOrUpdate(RedisModel redisModel) {
-        if (redisModel.getExpire() != null && redisModel.getExpire() > 0) {
-            redisTemplate.opsForValue().set(redisModel.getKey(), redisModel.getValue(), redisModel.getExpire(), TimeUnit.SECONDS);
+        Object value = redisModel.getValue();
+        String className = redisModel.getClassName();
+        if (value != null) {
+            if (value instanceof LinkedHashMap) {
+                String jsonString = JSON.toJSONString(value);
+                try {
+                    Class<?> aClass = Class.forName(className);
+                    // 转换类型
+                    value = JSON.parseObject(jsonString, aClass);
+                } catch (ClassNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            if (redisModel.getExpire() != null && redisModel.getExpire() > 0) {
+                redisTemplate.opsForValue().set(redisModel.getKey(), value, redisModel.getExpire(), TimeUnit.SECONDS);
+            } else {
+                redisTemplate.opsForValue().set(redisModel.getKey(), value);
+            }
         } else {
-            redisTemplate.opsForValue().set(redisModel.getKey(), redisModel.getValue());
+            redisTemplate.delete(redisModel.getKey());
         }
+
     }
 
     /**

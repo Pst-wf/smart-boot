@@ -31,6 +31,10 @@ public class RedisModel {
      */
     private Long expire;
     /**
+     * 类型
+     */
+    private String className;
+    /**
      * ID
      */
     private String id;

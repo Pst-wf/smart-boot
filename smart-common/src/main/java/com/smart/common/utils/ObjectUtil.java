@@ -510,8 +510,13 @@ public class ObjectUtil extends org.apache.commons.lang3.ObjectUtils {
      */
     public static <T> T transfer(Object obj, Class<T> clazz) {
         if (obj != null) {
-            return (T) obj;
+            if (clazz.isInstance(obj)) {
+                return clazz.cast(obj); // 安全地转换类型
+            } else {
+                throw new ClassCastException("无法将 " + obj.getClass().getName() + " 转换为 " + clazz.getName());
+            }
         }
         return null;
+
     }
 }
