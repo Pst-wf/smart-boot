@@ -7,7 +7,7 @@ server:
       charset: UTF-8
 spring:
   profiles:
-    active: demo
+    active: dev
     include: core,mybatis,druid,xxl,pool,camunda
   application:
     name: smart-boot
