@@ -7,10 +7,7 @@ import com.smart.auth.model.SmartUser;
 import com.smart.auth.utils.TokenUtil;
 import com.smart.common.constant.AuthConstant;
 import com.smart.common.constant.SmartConstant;
-import com.smart.common.utils.AesCbcUtil;
-import com.smart.common.utils.AuthUtil;
-import com.smart.common.utils.ListUtil;
-import com.smart.common.utils.StringUtil;
+import com.smart.common.utils.*;
 import com.smart.entity.system.FrontUserEntity;
 import com.smart.entity.system.IdentityEntity;
 import com.smart.entity.system.TenantEntity;
@@ -55,6 +52,8 @@ public class SmartUserDetailsServiceImpl implements SmartUserDetailsService {
     TenantService tenantService;
     @Autowired
     ConfigService configService;
+    @Autowired
+    RedisUtil redisUtil;
 
     /**
      * 获取用户信息
@@ -504,5 +503,76 @@ public class SmartUserDetailsServiceImpl implements SmartUserDetailsService {
     public boolean checkAutoSignUp() {
         String autoSignUp = configService.getConfig("auto_sign_up");
         return StringUtil.notBlankAndEquals(autoSignUp, SmartConstant.YES);
+    }
+
+    /**
+     * 记录登录错误次数
+     *
+     * @param username 账号
+     */
+    @Override
+    public String recordLockTimes(String username) {
+        // 密码错误记录判断是否记录次数
+        String sysLoginFailLockStatus = configService.getConfig("sys_login_fail_lock_status");
+        if (StringUtil.notBlankAndEquals(sysLoginFailLockStatus, SmartConstant.YES)) {
+            // 次数
+            String times = configService.getConfig("sys_login_fail_times");
+            // 验证周期
+            String cycle = configService.getConfig("sys_login_fail_check_cycle");
+            // 登陆失败锁定时长
+            String duration = configService.getConfig("sys_login_fail_lock_duration");
+            if (StringUtil.isNotBlank(times) && StringUtil.isNotBlank(cycle) && StringUtil.isNotBlank(duration)) {
+                String key = "lock:" + username;
+                // 查询已使用次数
+                Integer count = redisUtil.get(key, Integer.class);
+                // 分转秒
+                long expire = Long.parseLong(cycle) * 60;
+                if (count == null) {
+                    count = 0;
+                } else {
+                    // 获取缓存中剩余时长
+                    expire = redisUtil.getExpire(key);
+                }
+
+                if (count < Integer.parseInt(times)) {
+                    count = count + 1;
+                    if (count == Integer.parseInt(times)) {
+                        expire = Long.parseLong(duration) * 60;
+                    }
+                }
+                redisUtil.set(key, count, expire);
+                return "密码错误，" + cycle + "分钟内已连续错误" + count + "次，超过" + times + "次将锁定" + duration + "分钟";
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 校验账号是否被锁定
+     *
+     * @param username 账号
+     */
+    @Override
+    public String checkAccountLock(String username) {
+        // 密码错误记录判断是否记录次数
+        String sysLoginFailLockStatus = configService.getConfig("sys_login_fail_lock_status");
+        if (StringUtil.notBlankAndEquals(sysLoginFailLockStatus, SmartConstant.YES)) {
+            // 次数
+            String times = configService.getConfig("sys_login_fail_times");
+            // 登陆失败锁定时长
+            String duration = configService.getConfig("sys_login_fail_lock_duration");
+            if (StringUtil.isNotBlank(times) && StringUtil.isNotBlank(duration)) {
+                String key = "lock:" + username;
+                // 查询已使用次数
+                Integer count = redisUtil.get(key, Integer.class);
+                if (count == null) {
+                    count = 0;
+                }
+                if (count >= Integer.parseInt(times)) {
+                    return "账号登录失败超过" + times + "次，锁定" + duration + "分钟，请稍后再试";
+                }
+            }
+        }
+        return null;
     }
 }

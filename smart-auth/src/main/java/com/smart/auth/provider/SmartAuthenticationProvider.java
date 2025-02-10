@@ -6,6 +6,8 @@
 package com.smart.auth.provider;
 
 import com.smart.auth.service.SmartUserDetailsService;
+import com.smart.common.utils.StringUtil;
+import com.smart.model.exception.SmartException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -38,6 +40,11 @@ public class SmartAuthenticationProvider extends AbstractUserDetailsAuthenticati
         } else {
             String presentedPassword = authentication.getCredentials().toString();
             if (!this.passwordEncoder.matches(presentedPassword, userDetails.getPassword())) {
+                // 记录锁定次数
+                String msg = smartUserDetailsService.recordLockTimes(userDetails.getUsername());
+                if (StringUtil.isNotBlank(msg)) {
+                    throw new SmartException(408, msg);
+                }
                 this.logger.debug("Failed to authenticate since password does not match stored value");
                 throw new BadCredentialsException(this.messages.getMessage("AbstractUserDetailsAuthenticationProvider.badCredentials", "Bad credentials"));
             }

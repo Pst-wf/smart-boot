@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.smart.auth.captcha.CaptchaGenerator;
 import com.smart.auth.extend.wechat.service.WechatAuthService;
 import com.smart.auth.service.SmartTokenService;
+import com.smart.auth.service.SmartUserDetailsService;
 import com.smart.common.constant.SmartConstant;
 import com.smart.common.constant.TokenConstant;
 import com.smart.common.utils.*;
@@ -48,6 +49,7 @@ public class OauthController {
     FrontUserService frontUserService;
     SmartTokenService smartTokenService;
     WechatAuthService wechatAuthService;
+    SmartUserDetailsService smartUserDetailsService;
     ConfigService configService;
     RedisUtil redisUtil;
 
@@ -108,6 +110,13 @@ public class OauthController {
                     loginAuthRequest.setPassword(DigestUtil.md5Hex(loginAuthRequest.getPassword()));
                 }
             }
+            if (StringUtil.isNotBlank(loginAuthRequest.getUsername())) {
+                //验证账号是否被锁定（登陆失败导致锁定）
+                String msg = smartUserDetailsService.checkAccountLock(loginAuthRequest.getUsername());
+                if (StringUtil.isNotBlank(msg)) {
+                    return Result.fail(408, msg);
+                }
+            }
             OAuth2AccessToken body = tokenEndpoint.postAccessToken(principal, MapUtil.toMap(loginAuthRequest)).getBody();
             if (body != null) {
                 JSONObject jsonObject = new JSONObject(true);
@@ -121,6 +130,11 @@ public class OauthController {
                 }
                 System.err.println("token -> " + jsonObject.get(TokenConstant.JTI));
                 System.err.println("token超时时间 -> " + jsonObject.get(TokenConstant.EXPIRES_TIME));
+                if (StringUtil.isNotBlank(loginAuthRequest.getUsername())) {
+                    // 清除登录失败的key
+                    String key = "lock:" + loginAuthRequest.getUsername();
+                    redisUtil.del(key);
+                }
                 return Result.data(jsonObject);
             } else {
                 return Result.fail("登录失败！");

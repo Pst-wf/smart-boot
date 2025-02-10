@@ -47,4 +47,18 @@ public interface SmartUserDetailsService extends UserDetailsService {
      * @return boolean
      */
     boolean checkAutoSignUp();
+
+    /**
+     * 记录登录错误次数
+     *
+     * @param username 账号
+     */
+    String recordLockTimes(String username);
+
+    /**
+     * 校验账号是否被锁定
+     *
+     * @param username 账号
+     */
+    String checkAccountLock(String username);
 }

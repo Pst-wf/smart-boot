@@ -3,6 +3,7 @@ package com.smart.system.service;
 import com.alibaba.fastjson.JSON;
 import com.smart.common.constant.SmartConstant;
 import com.smart.common.utils.ListUtil;
+import com.smart.common.utils.NumberUtil;
 import com.smart.common.utils.StringUtil;
 import com.smart.common.utils.TreeUtil;
 import com.smart.model.exception.SmartException;
@@ -15,6 +16,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -62,6 +65,9 @@ public class RedisOptService {
                 redisModel.setName(targetKey);
                 redisModel.setDataType(dataType.code());
                 redisModel.setValue(value);
+                if (value != null) {
+                    redisModel.setClassName(value.getClass().getName());
+                }
                 redisModel.setExpire(expire);
                 list.add(redisModel);
             }
@@ -116,15 +122,22 @@ public class RedisOptService {
         Object value = redisModel.getValue();
         String className = redisModel.getClassName();
         if (value != null) {
-            if (value instanceof LinkedHashMap) {
-                String jsonString = JSON.toJSONString(value);
-                try {
-                    Class<?> aClass = Class.forName(className);
-                    // 转换类型
+            try {
+                Class<?> aClass = Class.forName(className);
+                // 转换类型
+                if (value instanceof LinkedHashMap) {
+                    String jsonString = JSON.toJSONString(value);
                     value = JSON.parseObject(jsonString, aClass);
-                } catch (ClassNotFoundException e) {
-                    throw new RuntimeException(e);
+                } else {
+                    // 数字类型
+                    if (NumberUtil.isNumeric(value.toString())) {
+                        Method valueOfMethod = aClass.getMethod("valueOf", String.class);
+                        value = valueOfMethod.invoke(null, value.toString());
+                    }
                 }
+            } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException |
+                     InvocationTargetException e) {
+                throw new RuntimeException(e);
             }
             if (redisModel.getExpire() != null && redisModel.getExpire() > 0) {
                 redisTemplate.opsForValue().set(redisModel.getKey(), value, redisModel.getExpire(), TimeUnit.SECONDS);
@@ -175,6 +188,7 @@ public class RedisOptService {
                     one.setKey(redisModel.getKey());
                     one.setDataType(redisModel.getDataType());
                     one.setValue(redisModel.getValue());
+                    one.setClassName(redisModel.getClassName());
                     one.setExpire(redisModel.getExpire());
                 }
                 all.add(one);
