@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.deepoove.poi.XWPFTemplate;
 import com.deepoove.poi.config.Configure;
+import com.smart.common.constant.FileConstant;
 import com.smart.common.utils.*;
 import com.smart.entity.file.FileEntity;
 import com.smart.entity.file.FileRecordEntity;
@@ -369,11 +370,26 @@ public class FileServiceImpl extends BaseServiceImpl<FileDao, FileEntity> implem
         String suffix = documentTypeMap.get(fileEntity.getFileName().substring(fileEntity.getFileName().lastIndexOf(".") + 1));
         JSONObject jsonObject = new JSONObject(true);
         jsonObject.put("callback", configService.getConfig("file_document_callback_url"));
-        jsonObject.put("url", fileEntity.getFilePath());
+        // 是否本地上传
+        boolean isLocal = StringUtil.notBlankAndEquals(fileEntity.getUploadType(), FileConstant.OSS_TYPE_0);
+        if (isLocal) {
+            String url = configService.getConfig("file_document_local_url");
+            if (StringUtil.isNotBlank(url)) {
+                if (!url.endsWith("/")) {
+                    url += "/";
+                }
+                jsonObject.put("url", url + fileEntity.getFileKey());
+            } else {
+                jsonObject.put("url", fileEntity.getFileKey());
+            }
+        } else {
+            jsonObject.put("url", fileEntity.getFilePath());
+        }
         jsonObject.put("serverUrl", configService.getConfig("file_document_url"));
         jsonObject.put("fileName", fileEntity.getFileName());
         jsonObject.put("documentType", suffix);
         jsonObject.put("id", id);
+        jsonObject.put("isLocal", isLocal);
         log.info("获取编辑参数 -> {}", jsonObject.toJSONString());
         return jsonObject;
     }
