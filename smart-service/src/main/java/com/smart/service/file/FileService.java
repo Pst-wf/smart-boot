@@ -93,6 +93,13 @@ public interface FileService extends BaseService<FileEntity> {
     void online(HttpServletRequest request, HttpServletResponse response, String id);
 
     /**
+     * 在线编辑Txt
+     *
+     * @param id 文件ID
+     */
+    String onlineTxt(String id);
+
+    /**
      * 回调
      *
      * @param vo 回调模型 (在线编辑)
@@ -100,6 +107,15 @@ public interface FileService extends BaseService<FileEntity> {
      * @throws Exception 异常
      */
     void callback(DocumentCallBackVO vo, String id) throws Exception;
+
+    /**
+     * 更新txt
+     *
+     * @param content 内容
+     * @param id      文件基础表唯一标识
+     * @throws Exception 异常
+     */
+    void callbackTxt(String content, String id) throws Exception;
 
     /**
      * 通过模板生成本地文件
@@ -123,7 +139,7 @@ public interface FileService extends BaseService<FileEntity> {
     /**
      * 获取编辑参数
      *
-     * @param id       文件ID
+     * @param id 文件ID
      * @return com.alibaba.fastjson.JSONObject
      */
     JSONObject onlineModal(String id);

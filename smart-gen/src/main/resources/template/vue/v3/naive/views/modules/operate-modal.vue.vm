@@ -350,8 +350,8 @@ watch(visible, () => {
     </NScrollbar>
     <template #footer>
       <NSpace justify="end" :size="16">
-        <NButton @click="close">{{ $t('common.cancel') }}</NButton>
-        <NButton v-if="operateType !== 'view'" type="primary" @click="submit()">{{ $t('common.confirm') }}</NButton>
+        <NButton @click="close">{{ $t('common.close') }}</NButton>
+        <NButton v-if="operateType !== 'view'" type="primary" @click="submit()">{{ $t('common.save') }}</NButton>
       </NSpace>
     </template>
   </NModal>

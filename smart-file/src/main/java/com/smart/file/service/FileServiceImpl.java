@@ -11,6 +11,7 @@ import com.smart.entity.file.FileEntity;
 import com.smart.entity.file.FileRecordEntity;
 import com.smart.entity.system.OssEntity;
 import com.smart.file.dao.FileDao;
+import com.smart.file.utils.MimeTypeUtils;
 import com.smart.file.utils.OssUtils;
 import com.smart.model.exception.SmartException;
 import com.smart.model.file.DocumentCallBackVO;
@@ -108,6 +109,7 @@ public class FileServiceImpl extends BaseServiceImpl<FileDao, FileEntity> implem
                 fileEntity.setFileName(fileName);
                 fileEntity.setFileSize(new BigDecimal(file.getSize()));
                 fileEntity.setIsEditable(StringUtil.isNotBlank(documentTypeMap.get(suffix)) ? YES : NO);
+                fileEntity.setIsTextEditable(MimeTypeUtils.isTextFileByMimeType(file.getInputStream()) ? YES : NO);
                 fileEntity.setContentType(file.getContentType());
                 fileEntity.setUploadType(current.getOssType());
                 fileEntity.setAuto(auto);
@@ -164,7 +166,6 @@ public class FileServiceImpl extends BaseServiceImpl<FileDao, FileEntity> implem
     public boolean delete(FileEntity entity) {
         try {
             List<FileEntity> removeList = super.getListByIdList(entity.getDeleteIds());
-            // todo oss 删除
             boolean b = super.delete(entity);
             if (b) {
                 OssUtils.delete(removeList);
@@ -353,6 +354,54 @@ public class FileServiceImpl extends BaseServiceImpl<FileDao, FileEntity> implem
     }
 
     /**
+     * 在线编辑Txt
+     *
+     * @param id 文件ID
+     */
+    @Override
+    public String onlineTxt(String id) {
+        FileEntity fileEntity = super.get(id);
+        if (fileEntity == null) {
+            throw new SmartException("文件不存在！");
+        }
+        if (StringUtils.isBlank(fileEntity.getFileName()) || !fileEntity.getFileName().contains(".")) {
+            throw new SmartException("文件格式异常！");
+        }
+        InputStream in = null;
+        try {
+            in = download(fileEntity);
+            return readFromInputStream(in);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (in != null) {
+                try {
+                    in.close(); // 确保流被关闭
+                } catch (IOException e) {
+                    System.err.println(e.getMessage());
+                }
+            }
+        }
+    }
+
+    /**
+     * 从 InputStream 中读取内容并转换为字符串
+     *
+     * @param inputStream 输入流，提供数据源
+     * @return 以字符串形式返回输入流中的内容
+     * @throws IOException 当读取输入流时可能发生I/O错误
+     */
+    private String readFromInputStream(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream result = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
+        int length;
+        while ((length = inputStream.read(buffer)) != -1) {
+            result.write(buffer, 0, length);
+        }
+        return result.toString("UTF-8");  // 确保使用正确的字符编码
+    }
+
+    /**
      * 获取编辑参数
      *
      * @param id 文件ID
@@ -446,6 +495,69 @@ public class FileServiceImpl extends BaseServiceImpl<FileDao, FileEntity> implem
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * 更新txt
+     *
+     * @param content 内容
+     * @param id      文件基础表唯一标识
+     * @throws Exception 异常
+     */
+    @Override
+    public void callbackTxt(String content, String id) throws Exception {
+        FileEntity fileEntity = super.get(id);
+        if (fileEntity == null) {
+            throw new SmartException("文件不存在！");
+        }
+        OssEntity current = ossService.getCurrent();
+        String path = Objects.requireNonNull(FileServiceImpl.class.getClassLoader().getResource("")).getPath();
+
+        File file = new File(path + "/" + fileEntity.getFileName());
+        boolean b = file.createNewFile();
+        if (b) {
+            System.out.println("path -> " + file.getAbsolutePath());
+            FileUtils.writeStringToFile(file, content, "UTF-8");
+            // 获取文件名及后缀
+            String name = FilenameUtils.getBaseName(fileEntity.getFileName());
+            String suffix = FilenameUtils.getExtension(fileEntity.getFileName());
+
+            // 获取随机数
+            String randomStr = StringUtil.getRandomStr(6);
+            String dateStr = DateUtil.formatDate(new Date(), "yyyyMMddHHmmss");
+            // 生成文件key
+            String key = name + randomStr + dateStr + "." + suffix;
+            MultipartFile multipartFile = getMultipartFile(file);
+            Map<String, String> map = OssUtils.upload(key, multipartFile, current);
+            String url = map.get("url");
+            key = map.get("key");
+            if (StringUtil.isNotBlank(url)) {
+                // 复制删除数据
+                FileEntity deleteFileEntity = new FileEntity();
+                BeanUtil.copyProperties(fileEntity, deleteFileEntity);
+                List<FileEntity> deleteList = ListUtil.newArrayList(deleteFileEntity);
+
+                fileEntity.setFileSize(new BigDecimal(multipartFile.getSize()));
+                fileEntity.setFilePath(url);
+                fileEntity.setFileKey(key);
+                fileEntity.setUploadType(current.getOssType());
+                boolean update = super.updateById(fileEntity);
+                if (!update) {
+                    throw new SmartException("保存失败！");
+                } else {
+                    // 删除原文件
+                    OssUtils.delete(deleteList);
+                    if (file.exists()) {
+                        // 删除本地临时文件
+                        file.delete();
+                    }
+                }
+            } else {
+                throw new SmartException("保存失败！");
+            }
+        } else {
+            throw new SmartException("创建本地文件失败!");
         }
     }
 

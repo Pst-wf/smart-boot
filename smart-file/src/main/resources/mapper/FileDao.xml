@@ -11,6 +11,7 @@
         <result property="fileSize" column="file_size"/>
         <result property="filePath" column="file_path"/>
         <result property="isEditable" column="is_editable"/>
+        <result property="isTextEditable" column="is_text_editable"/>
         <result property="contentType" column="content_type"/>
         <result property="uploadType" column="upload_type"/>
         <result property="refType" column="ref_type"/>

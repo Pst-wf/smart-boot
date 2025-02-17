@@ -1,5 +1,6 @@
 package com.smart.file.controller;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.smart.aop.log.LogType;
 import com.smart.aop.log.SaveLog;
@@ -234,6 +235,14 @@ public class FileController {
     }
 
     /**
+     * 在线编辑Txt
+     */
+    @GetMapping("/onlineTxt/{id}")
+    public String onlineTxt(@PathVariable String id) {
+        return Result.data(fileService.onlineTxt(id));
+    }
+
+    /**
      * 文件编辑回调
      *
      * @param documentCallBackVO 回调模型 (在线编辑)
@@ -246,6 +255,30 @@ public class FileController {
         Map<String, Object> objectObjectHashMap = new HashMap<>();
         objectObjectHashMap.put("error", 0);
         return objectObjectHashMap;
+    }
+
+    /**
+     * 更新txt文件
+     */
+    @PostMapping("/callbackTxt")
+    public String callbackTxt(@RequestBody JSONObject json) throws Exception {
+        String id = json.getString("id");
+        if(StringUtil.isBlank(id)){
+            return Result.fail("文件编码为空！");
+        }
+        fileService.callbackTxt(json.getString("data"), id);
+        return Result.success();
+    }
+
+    /**
+     * 导出文件加水印
+     *
+     * @param isWaterMark 是否加水印
+     * @param fileId      文件ID
+     */
+    @PostMapping("/downloadFileWaterMark")
+    public void downloadFileWaterMark(@RequestParam("fileId") String fileId, @RequestParam("isWaterMark") String isWaterMark, HttpServletResponse response) {
+        fileService.downloadFileWaterMark(fileId, StringUtil.notBlankAndEquals(isWaterMark, "1"), response);
     }
 
     /**

@@ -56,6 +56,10 @@ public class FileEntity extends BaseEntity {
      * 是否可编辑
      */
     private String isEditable;
+    /**
+     * 是否文本可编辑
+     */
+    private String isTextEditable;
 
     /**
      * 响应头类型
