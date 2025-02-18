@@ -263,22 +263,11 @@ public class FileController {
     @PostMapping("/callbackTxt")
     public String callbackTxt(@RequestBody JSONObject json) throws Exception {
         String id = json.getString("id");
-        if(StringUtil.isBlank(id)){
+        if (StringUtil.isBlank(id)) {
             return Result.fail("文件编码为空！");
         }
         fileService.callbackTxt(json.getString("data"), id);
         return Result.success();
-    }
-
-    /**
-     * 导出文件加水印
-     *
-     * @param isWaterMark 是否加水印
-     * @param fileId      文件ID
-     */
-    @PostMapping("/downloadFileWaterMark")
-    public void downloadFileWaterMark(@RequestParam("fileId") String fileId, @RequestParam("isWaterMark") String isWaterMark, HttpServletResponse response) {
-        fileService.downloadFileWaterMark(fileId, StringUtil.notBlankAndEquals(isWaterMark, "1"), response);
     }
 
     /**
