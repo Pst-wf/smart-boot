@@ -1,6 +1,7 @@
 package com.smart.system.service;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.smart.common.constant.SmartConstant;
 import com.smart.common.utils.ListUtil;
 import com.smart.common.utils.NumberUtil;
@@ -122,23 +123,56 @@ public class RedisOptService {
         Object value = redisModel.getValue();
         String className = redisModel.getClassName();
         if (value != null) {
-            try {
-                Class<?> aClass = Class.forName(className);
-                // 转换类型
-                if (value instanceof LinkedHashMap) {
-                    String jsonString = JSON.toJSONString(value);
-                    value = JSON.parseObject(jsonString, aClass);
-                } else {
-                    // 数字类型
-                    if (NumberUtil.isNumeric(value.toString())) {
-                        Method valueOfMethod = aClass.getMethod("valueOf", String.class);
-                        value = valueOfMethod.invoke(null, value.toString());
+            // 操作类型
+            String opt = redisModel.getOpt();
+            if (StringUtil.isBlank(opt)) {
+                throw new SmartException("操作参数异常！");
+            }
+            if (opt.equals("add")) {
+                if (redisModel.getValueType().equals("object")) {
+                    try {
+                        value = JSON.parseObject(value.toString());
+                    } catch (Exception e) {
+                        throw new SmartException("数据类型异常！");
                     }
                 }
-            } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException |
-                     InvocationTargetException e) {
-                throw new RuntimeException(e);
+            } else {
+                if (StringUtil.isBlank(className)) {
+                    throw new SmartException("数据类型不能为空！");
+                }
+
+                try {
+                    Class<?> aClass = Class.forName(className);
+                    // 转换类型
+                    if (value instanceof LinkedHashMap || value instanceof JSONObject) {
+                        String jsonString = JSON.toJSONString(value);
+                        value = JSON.parseObject(jsonString, aClass);
+                    } else {
+                        if (redisModel.getValueType().equals("object")) {
+                            try {
+                                value =  JSON.parseObject(value.toString());
+                            } catch (Exception e) {
+                                throw new SmartException("数据类型异常！");
+                            }
+                        }
+                        // 数字类型
+                        if (NumberUtil.isNumeric(value.toString())) {
+                            Method valueOfMethod;
+                            try {
+                                valueOfMethod = aClass.getMethod("valueOf", String.class);
+                                value = valueOfMethod.invoke(null, value.toString());
+                            } catch (NoSuchMethodException e) {
+                                System.err.println("转换数字类型失败，无此方法");
+                            }
+                        }
+                    }
+                } catch (ClassNotFoundException  | IllegalAccessException |
+                         InvocationTargetException e) {
+                    throw new RuntimeException(e);
+                }
             }
+
+
             if (redisModel.getExpire() != null && redisModel.getExpire() > 0) {
                 redisTemplate.opsForValue().set(redisModel.getKey(), value, redisModel.getExpire(), TimeUnit.SECONDS);
             } else {

@@ -5,9 +5,9 @@
 #foreach($column in $queryColumns)
         <a-form-item label="${column.comments}" class="smart-query-form-item">
 #if($column.components == "INPUT" || $column.components == "TEXTAREA")
-          <a-input style="width: 300px" v-model:value="queryForm.${column.attrName}" placeholder="请输入${column.comments}"/>
+          <a-input style="width: 300px" v-model:value="queryForm.${column.attrName}" placeholder="请输入${column.comments}" allowClear/>
 #elseif($column.components == "INPUT-NUMBER")
-          <a-input-number style="width: 300px" v-model:value="queryForm.${column.attrName}" placeholder="请输入${column.comments}"/>
+          <a-input-number style="width: 300px" v-model:value="queryForm.${column.attrName}" placeholder="请输入${column.comments}" allowClear/>
 #elseif($column.components == "SELECT")
           <a-select
               style="width: 300px"

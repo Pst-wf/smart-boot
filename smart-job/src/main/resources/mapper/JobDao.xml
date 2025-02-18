@@ -40,14 +40,14 @@
         SELECT *
         FROM sys_job AS t
         WHERE t.trigger_status = 1
-          AND t.trigger_next_time <![CDATA[ <= ]]> #{maxNextTime}
+        AND t.trigger_next_time <![CDATA[ <= ]]> #{maxNextTime}
         ORDER BY id ASC
         LIMIT #{pageSize}
     </select>
     <select id="findPage" resultType="com.smart.entity.job.JobEntity">
-        SELECT a.*, b.title AS 'groupName'
+        SELECT a.*, b.app_name AS 'groupName'
         FROM sys_job a
-                 LEFT JOIN sys_job_group b ON a.job_group = b.id
+        LEFT JOIN sys_job_group b ON a.job_group = b.id
         <if test="ew.customSqlSegment != null and ew.customSqlSegment != ''">
             ${ew.customSqlSegment}
         </if>

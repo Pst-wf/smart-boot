@@ -14,14 +14,23 @@ import java.util.List;
  */
 @Data
 public class RedisModel {
+
+    /**
+     * 新增或修改
+     */
+    private String opt;
     /**
      * 键
      */
     private String key;
     /**
-     * 键
+     * 数据类型
      */
     private String dataType;
+    /**
+     * 类型
+     */
+    private String valueType;
     /**
      * 值
      */

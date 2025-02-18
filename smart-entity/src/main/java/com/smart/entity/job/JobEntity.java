@@ -147,7 +147,7 @@ public class JobEntity extends BaseEntity {
     /**
      * 执行器名称
      */
-    @Column(name = "b.title", queryType = QueryType.LIKE)
+    @Column(name = "b.app_name", queryType = QueryType.LIKE)
     @TableField(exist = false)
     private String groupName;
 

@@ -11,11 +11,11 @@
 #foreach($column in $formColumns)
       <a-form-item label="${column.comments}" name="${column.attrName}">
 #if($column.components == "INPUT")
-        <a-input v-model:value="form.${column.attrName}" placeholder="请输入${column.comments}"/>
+        <a-input v-model:value="form.${column.attrName}" placeholder="请输入${column.comments}" allowClear/>
 #elseif($column.components == "TEXTAREA")
         <a-textarea :auto-size="{ minRows: 4 }" v-model:value="form.${column.attrName}" placeholder="请输入${column.comments}"/>
 #elseif($column.components == "INPUT-NUMBER")
-        <a-input-number v-model:value="form.${column.attrName}" placeholder="请输入${column.comments}" style="width: 100%"/>
+        <a-input-number v-model:value="form.${column.attrName}" placeholder="请输入${column.comments}" style="width: 100%" allowClear/>
 #elseif($column.components == "SELECT")
         <a-select
             v-model:value="form.${column.attrName}"
