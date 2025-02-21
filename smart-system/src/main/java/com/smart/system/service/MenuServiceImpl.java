@@ -126,12 +126,16 @@ public class MenuServiceImpl extends BaseServiceImpl<MenuDao, MenuEntity> implem
             }
             if (!isAdd) {
                 // 判断是否自己的父级原来是自己的子集
-                List<MenuEntity> children = baseMapper.selectList(new LambdaQueryWrapper<MenuEntity>().eq(MenuEntity::getParentId, entity.getId()));
-                List<String> childrenIds = children.stream().map(MenuEntity::getId).collect(Collectors.toList());
-                if (childrenIds.contains(parentId)) {
-                    //如果修改自己的parentId为自己的子集 则需要更新子集
-                    MenuEntity menu = baseMapper.selectById(entity.getId());
-                    if (menu != null) {
+                List<MenuEntity> list = super.list();
+                List<MenuEntity> tree = TreeUtil.buildTree(list);
+                // 子集IDS
+                List<String> ids = ListUtil.newArrayList(entity.getId());
+                getChildrenId(tree, ids);
+                MenuEntity menu = list.stream().filter(x -> x.getId().equals(entity.getId())).findFirst().orElse(null);
+                if (menu != null && !menu.getParentId().equals(parentId)) {
+                    // 修改了父级
+                    if (ids.contains(parentId)) {
+                        //如果修改自己的parentId为自己的子集 则需要更新子集
                         LambdaUpdateChainWrapper<MenuEntity> updateChainWrapper = new LambdaUpdateChainWrapper<>(baseMapper);
                         updateChainWrapper.set(MenuEntity::getParentId, menu.getParentId()).eq(MenuEntity::getId, parentId).update();
                     }
@@ -323,6 +327,7 @@ public class MenuServiceImpl extends BaseServiceImpl<MenuDao, MenuEntity> implem
             map.put("label", x.getMenuName());
             map.put("i18nKey", x.getI18nKey());
             map.put("disabled", x.getStatus().equals(NO));
+            map.put("routePath", x.getRoutePath());
             maps.add(map);
         });
         return TreeUtil.buildTreeMap(maps, "id", "pId");
@@ -421,15 +426,30 @@ public class MenuServiceImpl extends BaseServiceImpl<MenuDao, MenuEntity> implem
     /**
      * 获取所有子集IDS
      */
-    private void getChildrenId(List<MenuEntity> list, List<String> deleteIds) {
+    private void getChildrenId(List<MenuEntity> list, List<String> ids) {
         for (MenuEntity menuEntity : list) {
-            if (deleteIds.contains(menuEntity.getParentId())) {
-                deleteIds.add(menuEntity.getId());
+            if (ids.contains(menuEntity.getParentId())) {
+                ids.add(menuEntity.getId());
             }
             if (menuEntity.getChildren() != null && !menuEntity.getChildren().isEmpty()) {
-                getChildrenId(menuEntity.getChildren(), deleteIds);
+                getChildrenId(menuEntity.getChildren(), ids);
             }
         }
+    }
+
+    /**
+     * 启用/停用
+     *
+     * @param entity bean实体
+     * @return boolean
+     */
+    @Override
+    public boolean updateStatus(MenuEntity entity) {
+        LambdaUpdateChainWrapper<MenuEntity> updateChainWrapper = new LambdaUpdateChainWrapper<>(baseMapper);
+        return updateChainWrapper
+                .set(MenuEntity::getStatus, StringUtil.notBlankAndEquals(entity.getStatus(), YES) ? YES : NO)
+                .eq(MenuEntity::getId, entity.getId())
+                .update();
     }
 }
 

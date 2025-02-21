@@ -150,6 +150,9 @@ public class GenTableServiceImpl extends BaseServiceImpl<GenTableDao, GenTableEn
             genTableColumnService.updateBatchById(entity.getColumns());
         }
         if (entity.getGenerateStatus() != null && entity.getGenerateStatus()) {
+            if (StringUtil.isNotBlank(entity.getMenuId())) {
+                entity.setMenu(menuService.getById(entity.getMenuId()));
+            }
             // 生成代码
             GenUtils.generatorCodeInFile(entity, entity.getColumns());
         }

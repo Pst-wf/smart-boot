@@ -98,4 +98,15 @@ public class PostController {
         return Result.status(postService.delete(postEntity));
     }
 
+    /**
+     * 修改状态
+     *
+     * @param entity bean实体
+     * @return String
+     */
+    @HasPermission("post:update")
+    @PostMapping("/updateStatus")
+    public String updateStatus(@RequestBody PostEntity entity) {
+        return Result.status(postService.updateStatus(entity));
+    }
 }

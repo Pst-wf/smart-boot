@@ -127,7 +127,7 @@ public class GenTableController {
     }
 
     /**
-     * 获取所有表信息
+     * 预览
      *
      * @return String
      */

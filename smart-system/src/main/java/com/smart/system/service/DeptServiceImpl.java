@@ -15,6 +15,7 @@ import com.smart.service.system.DeptService;
 import com.smart.service.system.IdentityInfoService;
 import com.smart.system.dao.DeptDao;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.smart.common.constant.SmartConstant.INT_ZERO;
+import static com.smart.common.constant.SmartConstant.*;
 
 /**
  * 机构 ServiceImpl
@@ -158,8 +159,6 @@ public class DeptServiceImpl extends BaseServiceImpl<DeptDao, DeptEntity> implem
         if (one != null && !one.getId().equals(entity.getId())) {
             throw new SmartException("机构编码已存在！");
         }
-
-
         DeptEntity dept = baseMapper.selectById(entity.getId());
         String parentId = entity.getParentId();
         String oldParentId = dept.getParentId();
@@ -169,7 +168,7 @@ public class DeptServiceImpl extends BaseServiceImpl<DeptDao, DeptEntity> implem
             if (StringUtil.notBlankAndEquals(parentId, entity.getId())) {
                 throw new SmartException("父级和本级不能为同一条数据！");
             }
-            List<DeptEntity> children = baseMapper.selectList(new LambdaQueryWrapper<DeptEntity>().eq(DeptEntity::getParentId, entity.getId()));
+            List<DeptEntity> children = baseMapper.selectList(new LambdaQueryWrapper<DeptEntity>().like(DeptEntity::getAncestors, entity.getId()));
             List<String> childrenIds = children.stream().map(DeptEntity::getId).collect(Collectors.toList());
             if (childrenIds.contains(parentId)) {
                 //如果修改自己的parentId为自己的子集 则需要更新子集
@@ -279,7 +278,6 @@ public class DeptServiceImpl extends BaseServiceImpl<DeptDao, DeptEntity> implem
         return formatDeptForExport(ListUtil.newArrayList(), deptList);
     }
 
-
     /**
      * 递归处理部门（导出）
      *
@@ -388,19 +386,34 @@ public class DeptServiceImpl extends BaseServiceImpl<DeptDao, DeptEntity> implem
         return sb.toString();
     }
 
-
     /**
      * 获取所有子集IDS和子集实体
      */
-    private void getChildrenIdAndChildrenDept(List<DeptEntity> list, List<String> deleteIds, List<DeptEntity> res) {
+    private void getChildrenIdAndChildrenDept(List<DeptEntity> list, List<String> ids, List<DeptEntity> res) {
         for (DeptEntity deptEntity : list) {
-            if (deleteIds.contains(deptEntity.getParentId())) {
-                deleteIds.add(deptEntity.getId());
+            if (ids.contains(deptEntity.getParentId())) {
+                ids.add(deptEntity.getId());
                 res.add(deptEntity);
             }
             if (deptEntity.getChildren() != null && !deptEntity.getChildren().isEmpty()) {
-                getChildrenIdAndChildrenDept(deptEntity.getChildren(), deleteIds, res);
+                getChildrenIdAndChildrenDept(deptEntity.getChildren(), ids, res);
             }
         }
+    }
+
+    /**
+     * 启用/停用
+     *
+     * @param entity bean实体
+     * @return boolean
+     */
+    @Override
+    @CacheEvict(cacheNames = "dept", key = "#entity.id")
+    public boolean updateStatus(DeptEntity entity) {
+        LambdaUpdateChainWrapper<DeptEntity> updateChainWrapper = new LambdaUpdateChainWrapper<>(baseMapper);
+        return updateChainWrapper
+                .set(DeptEntity::getStatus, StringUtil.notBlankAndEquals(entity.getStatus(), YES) ? YES : NO)
+                .eq(DeptEntity::getId, entity.getId())
+                .update();
     }
 }

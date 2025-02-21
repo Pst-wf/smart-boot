@@ -1,6 +1,8 @@
 package com.smart.system.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
+import com.smart.common.utils.StringUtil;
 import com.smart.entity.system.IdentityEntity;
 import com.smart.entity.system.PostEntity;
 import com.smart.model.exception.SmartException;
@@ -11,6 +13,9 @@ import com.smart.system.dao.PostDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import static com.smart.common.constant.SmartConstant.NO;
+import static com.smart.common.constant.SmartConstant.YES;
 
 /**
  * 岗位 ServiceImpl
@@ -59,5 +64,20 @@ public class PostServiceImpl extends BaseServiceImpl<PostDao, PostEntity> implem
         if (count > 0) {
             throw new SmartException("要删除的岗位下有用户存在，不可删除！");
         }
+    }
+
+    /**
+     * 启用/停用
+     *
+     * @param entity bean实体
+     * @return boolean
+     */
+    @Override
+    public boolean updateStatus(PostEntity entity) {
+        LambdaUpdateChainWrapper<PostEntity> updateChainWrapper = new LambdaUpdateChainWrapper<>(baseMapper);
+        return updateChainWrapper
+                .set(PostEntity::getStatus, StringUtil.notBlankAndEquals(entity.getStatus(), YES) ? YES : NO)
+                .eq(PostEntity::getId, entity.getId())
+                .update();
     }
 }

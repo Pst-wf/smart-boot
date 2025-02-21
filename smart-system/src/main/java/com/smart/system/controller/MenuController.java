@@ -270,4 +270,16 @@ public class MenuController {
         MenuEntity result = menuService.saveEntity(menu);
         return result != null ? Result.data(result) : Result.fail(ResultCode.FAIL);
     }
+
+    /**
+     * 修改状态
+     *
+     * @param entity bean实体
+     * @return String
+     */
+    @HasPermission("menu:update")
+    @PostMapping("/updateStatus")
+    public String updateStatus(@RequestBody MenuEntity entity) {
+        return Result.status(menuService.updateStatus(entity));
+    }
 }

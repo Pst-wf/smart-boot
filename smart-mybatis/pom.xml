@@ -15,5 +15,10 @@
             <artifactId>smart-common</artifactId>
             <version>${revision}</version>
         </dependency>
+        <dependency>
+            <groupId>com.smart</groupId>
+            <artifactId>smart-model</artifactId>
+            <version>${revision}</version>
+        </dependency>
     </dependencies>
 </project>

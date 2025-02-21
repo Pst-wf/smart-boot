@@ -68,5 +68,13 @@ public interface DeptService extends BaseService<DeptEntity> {
      * @return List
      */
     List<Map<String, Object>> getTreeFormat(DeptEntity deptEntity);
+
+    /**
+     * 启用/停用
+     *
+     * @param entity bean实体
+     * @return boolean
+     */
+    boolean updateStatus(DeptEntity entity);
 }
 

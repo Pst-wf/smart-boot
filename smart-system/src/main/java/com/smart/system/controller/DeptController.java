@@ -4,7 +4,6 @@ import com.smart.aop.log.LogType;
 import com.smart.aop.log.SaveLog;
 import com.smart.aop.permission.HasPermission;
 import com.smart.common.utils.DateUtil;
-import com.smart.common.utils.DigestUtil;
 import com.smart.entity.system.DeptEntity;
 import com.smart.model.excel.annotation.ExcelField;
 import com.smart.model.response.r.Result;
@@ -172,7 +171,7 @@ public class DeptController {
         List<MultipartFile> files = multiFileMap.get("files");
         try (ExcelImport excelImport = new ExcelImport(files.get(0), 2, 0)) {
             List<DeptEntity> dataList = excelImport.getDataList(DeptEntity.class);
-            dataList.forEach(x->{
+            dataList.forEach(x -> {
                 x.setParentId("0");
                 x.setAncestors("0");
                 x.setSort(0);
@@ -182,6 +181,18 @@ public class DeptController {
         } catch (Exception e) {
             return Result.fail("导入失败！" + e.getMessage());
         }
+    }
+
+    /**
+     * 修改状态
+     *
+     * @param entity bean实体
+     * @return String
+     */
+    @HasPermission("dept:update")
+    @PostMapping("/updateStatus")
+    public String updateStatus(@RequestBody DeptEntity entity) {
+        return Result.status(deptService.updateStatus(entity));
     }
 
 }

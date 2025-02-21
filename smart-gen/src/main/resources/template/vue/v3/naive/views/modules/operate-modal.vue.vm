@@ -229,22 +229,23 @@ watch(visible, () => {
 #set($placeholder = "$t('page.#if($hasMenu)${menu.routeName}.#end${classname}.form.${column.attrName}')")
            <NFormItemGi span="24 m:24" :label="${label}" path="${column.attrName}">
 #if($column.components == "INPUT")
-             <NInput v-model:value="model.${column.attrName}" :placeholder="${placeholder}" />
+             <NInput v-model:value="model.${column.attrName}" :placeholder="${placeholder}" clearable />
 #elseif($column.components == "INPUT-NUMBER")
 #if($column.isNumber)
-             <NInputNumber v-model:value="model.${column.attrName}" class="w-full" :placeholder="${placeholder}" />
+             <NInputNumber v-model:value="model.${column.attrName}" class="w-full" :placeholder="${placeholder}" clearable />
 #else
              <NInputNumber
                v-model:value="${column.attrName}InputNumber"
                class="w-full"
                :placeholder="${placeholder}"
+               clearable
                @update:value="val => {
                  model.${column.attrName} = val ? val.toString() : null;
                }"
              />
 #end
 #elseif($column.components == "TEXTAREA")
-             <NInput v-model:value="model.${column.attrName}" type="textarea" :placeholder="${placeholder}" />
+             <NInput v-model:value="model.${column.attrName}" type="textarea" :placeholder="${placeholder}" clearable />
 #elseif($column.components == "SELECT")
              <NSelect
                 v-model:value="model.${column.attrName}"

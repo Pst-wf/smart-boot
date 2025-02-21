@@ -83,31 +83,6 @@ public class UserServiceImpl extends BaseServiceImpl<UserDao, UserEntity> implem
     }
 
     @Override
-    public String getToken(UserEntity userEntity) {
-        String token = "";
-        if (userEntity != null) {
-            JSONObject user = new JSONObject(true);
-            user.put("userId", userEntity.getId());
-            user.put("nickname", userEntity.getNickname());
-            user.put("username", userEntity.getUsername());
-            user.put("isSys", "system".equals(userEntity.getId()));
-            user.put("identityId", userEntity.getIdentityList().get(0).getId());
-            user.put("roleId", userEntity.getIdentityList().get(0).getRoleId());
-            user.put("postId", userEntity.getIdentityList().get(0).getPostId());
-            user.put("deptId", userEntity.getIdentityList().get(0).getDeptId());
-            user.put("organizationId", userEntity.getIdentityList().get(0).getOrganizationId());
-            Date expiresAt = new Date(System.currentTimeMillis() + expireTime);
-            log.info("生成token，有效期为 【" + DateUtil.formatDate(expiresAt, "yyyy-MM-dd HH:mm:ss") + "】");
-            // 以 password 作为 token 的密钥
-            token = JWT.create()
-                    .withClaim("user", user.toJSONString())
-                    .withExpiresAt(expiresAt)
-                    .sign(Algorithm.HMAC256(userEntity.getPassword()));
-        }
-        return token;
-    }
-
-    @Override
     public UserEntity getUserWithIdentity(String id) {
         // 需要再次查询只有角色id的
         UserEntity user = baseMapper.getUserWithIdentity(id);
@@ -126,16 +101,6 @@ public class UserServiceImpl extends BaseServiceImpl<UserDao, UserEntity> implem
         baseMapper.updateLoginInfo(userEntity.getLastLoginIp(), userEntity.getId(), userEntity.getLastLoginDate());
 
     }
-
-    @Override
-    public UserEntity getByToken(String token) {
-        if (StringUtil.isNotBlank(token)) {
-            UserVO user = JSONObject.parseObject(JWT.decode(token).getClaim("user").asString(), UserVO.class);
-            return super.getById(user.getUserId());
-        }
-        return null;
-    }
-
 
     /**
      * 保存之前处理

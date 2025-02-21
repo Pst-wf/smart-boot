@@ -16,14 +16,6 @@ import java.util.List;
 public interface UserService extends BaseService<UserEntity> {
 
     /**
-     * 生成token
-     *
-     * @param user 用户bean
-     * @return boolean
-     */
-    String getToken(UserEntity user);
-
-    /**
      * 获取用户和身份
      *
      * @param id 用户id
@@ -37,14 +29,6 @@ public interface UserService extends BaseService<UserEntity> {
      * @param userEntity 用户信息
      */
     void updateLoginInfo(UserEntity userEntity);
-
-    /**
-     * 通过token获取用户
-     *
-     * @param token 用户token
-     * @return UserEntity
-     */
-    UserEntity getByToken(String token);
 
     /**
      * 启用/停用

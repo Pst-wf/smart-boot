@@ -54,5 +54,13 @@ public interface RoleService extends BaseService<RoleEntity> {
      * @return List
      */
     List<ScopeEntity> getScopes(String roleId);
+
+    /**
+     * 启用/停用
+     *
+     * @param entity bean实体
+     * @return boolean
+     */
+    boolean updateStatus(RoleEntity entity);
 }
 

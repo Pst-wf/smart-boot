@@ -6,7 +6,7 @@ import { ref } from 'vue';
 #if($hasListImage)
 import ImagePreview from '@/components/custom/image-preview.vue';
 #end
-import { ${classname}Page, delete${className}, export${className}, download${className}Template#if($uploadColumns.size() > 0), get${className}#end } from '@/service/api';
+import { #if($isPage) ${classname}Page#else ${classname}List#end, delete${className}, export${className}, download${className}Template#if($uploadColumns.size() > 0), get${className}#end } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import {#if($isPage) useTable#else useTableList#end, useTableOperate } from '@/hooks/common/table';
 #set( $t = '$t' )
@@ -183,9 +183,11 @@ const { columns, columnChecks, data, loading, getData,#if($isPage) mobilePaginat
           </div>
       )
     }
-  ],
+  ]#if($isPage),
   // 是否显示分页总数量
   showTotal: true
+#else
+#end
 });
 
 const {

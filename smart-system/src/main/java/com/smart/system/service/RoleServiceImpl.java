@@ -1,6 +1,7 @@
 package com.smart.system.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import com.github.pagehelper.Page;
 import com.smart.common.utils.CacheUtil;
 import com.smart.common.utils.ListUtil;
@@ -20,6 +21,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.smart.common.constant.SmartConstant.NO;
+import static com.smart.common.constant.SmartConstant.YES;
 import static com.smart.system.constant.SystemConstant.MENU_TYPE_2;
 
 /**
@@ -198,5 +201,20 @@ public class RoleServiceImpl extends BaseServiceImpl<RoleDao, RoleEntity> implem
     @Cacheable(cacheNames = "scope", key = "#roleId", unless = "#result == null")
     public List<ScopeEntity> getScopes(String roleId) {
         return scopeService.findScopesByRoleId(roleId);
+    }
+
+    /**
+     * 启用/停用
+     *
+     * @param entity bean实体
+     * @return boolean
+     */
+    @Override
+    public boolean updateStatus(RoleEntity entity) {
+        LambdaUpdateChainWrapper<RoleEntity> updateChainWrapper = new LambdaUpdateChainWrapper<>(baseMapper);
+        return updateChainWrapper
+                .set(RoleEntity::getStatus, StringUtil.notBlankAndEquals(entity.getStatus(), YES) ? YES : NO)
+                .eq(RoleEntity::getId, entity.getId())
+                .update();
     }
 }

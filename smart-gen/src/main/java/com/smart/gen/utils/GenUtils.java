@@ -1054,7 +1054,14 @@ public class GenUtils {
             String res = underlineCase.replace("_", "-");
             String dir = res;
             if (table.getMenu() != null) {
-                dir = table.getMenu().getRouteName() + File.separator + dir;
+                String routePath = table.getMenu().getRoutePath();
+                if (StringUtil.isNotBlank(routePath)) {
+                    if (routePath.startsWith("/")) {
+                        routePath = routePath.substring(1);
+                    }
+                    routePath = routePath.replace("/", "\\");
+                    dir = routePath + File.separator + dir;
+                }
             }
             if (template.contains(API_JS)) {
                 return ant3Path + "api" + File.separator + dir + File.separator + res + "-api.js";
@@ -1078,7 +1085,14 @@ public class GenUtils {
             String res = underlineCase.replace("_", "-");
             String dir = res;
             if (table.getMenu() != null) {
-                dir = table.getMenu().getRouteName() + File.separator + dir;
+                String routePath = table.getMenu().getRoutePath();
+                if (StringUtil.isNotBlank(routePath)) {
+                    if (routePath.startsWith("/")) {
+                        routePath = routePath.substring(1);
+                    }
+                    routePath = routePath.replace("/", "\\");
+                    dir = routePath + File.separator + dir;
+                }
             }
             if (template.contains(TYPINGS_TS)) {
                 return naivePath + "typings" + File.separator + dir + File.separator + "index.d.ts";

@@ -1126,4 +1126,26 @@ CREATE TABLE `sys_user_config`  (
 -- Records of sys_user_config
 -- ----------------------------
 
+-- ----------------------------
+-- Table structure for sys_region
+-- ----------------------------
+DROP TABLE IF EXISTS `sys_region`;
+CREATE TABLE `sys_region`  (
+                               `id` varchar(64) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '主键',
+                               `level` int NOT NULL DEFAULT 0 COMMENT '级别',
+                               `parent_id` varchar(64) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '0' COMMENT '父级ID',
+                               `area_code` varchar(30) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '' COMMENT '行政编号',
+                               `name` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '' COMMENT '名称',
+                               `merger_name` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT '' COMMENT '合并名称',
+                               `lng` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT '' COMMENT '经度',
+                               `lat` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT '' COMMENT '纬度',
+                               `status` varchar(10) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '1' COMMENT '启用状态',
+                               `ancestors` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '祖级列表',
+                               PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '行政区域' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of sys_user_config
+-- ----------------------------
+
 SET FOREIGN_KEY_CHECKS = 1;

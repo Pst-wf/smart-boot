@@ -12,6 +12,7 @@ import com.github.pagehelper.PageInfo;
 import com.smart.common.utils.ListUtil;
 import com.smart.common.utils.ObjectUtil;
 import com.smart.common.utils.StringUtil;
+import com.smart.model.exception.SmartException;
 import com.smart.mybatis.annotation.Column;
 import com.smart.mybatis.dao.BaseDao;
 import com.smart.mybatis.entity.BaseIdEntity;
@@ -309,7 +310,7 @@ public class BaseServiceImpl<D extends BaseDao<T>, T> extends ServiceImpl<D, T> 
             //验证是否为空
             if (!isNull) {
                 if (StringUtil.isBlank(value)) {
-                    throw new RuntimeException("[" + f.getName() + "]不能为NULL或空白字符");
+                    throw new SmartException("[" + f.getName() + "]不能为NULL或空白字符");
                 }
             }
             //验证是否是数字
@@ -317,7 +318,7 @@ public class BaseServiceImpl<D extends BaseDao<T>, T> extends ServiceImpl<D, T> 
                 if (StringUtil.isNotBlank(value)) {
                     boolean isNaN = IS_NAN_PATTERN.matcher(value).matches();
                     if (!isNaN) {
-                        throw new RuntimeException("[" + f.getName() + "]必须为数字");
+                        throw new SmartException("[" + f.getName() + "]必须为数字");
                     }
                 }
             }
@@ -325,7 +326,7 @@ public class BaseServiceImpl<D extends BaseDao<T>, T> extends ServiceImpl<D, T> 
             if (length != 255) {
                 if (StringUtil.isNotBlank(value)) {
                     if (value.length() > v.length()) {
-                        throw new RuntimeException("[" + f.getName() + "]长度不能超过" + v.length());
+                        throw new SmartException("[" + f.getName() + "]长度不能超过" + v.length());
                     }
                 }
             }
@@ -333,7 +334,7 @@ public class BaseServiceImpl<D extends BaseDao<T>, T> extends ServiceImpl<D, T> 
             if (tel) {
                 if (StringUtil.isNotBlank(value)) {
                     if (value.length() != 11) {
-                        throw new RuntimeException("手机号格式不正确");
+                        throw new SmartException("手机号格式不正确");
                     }
                 }
             }
@@ -341,7 +342,7 @@ public class BaseServiceImpl<D extends BaseDao<T>, T> extends ServiceImpl<D, T> 
             if (idCard) {
                 if (StringUtil.isNotBlank(value)) {
                     if (value.length() != 15 && value.length() != 18) {
-                        throw new RuntimeException("请输入15位或18位身份证");
+                        throw new SmartException("请输入15位或18位身份证");
                     }
                 }
             }
@@ -350,7 +351,7 @@ public class BaseServiceImpl<D extends BaseDao<T>, T> extends ServiceImpl<D, T> 
                 if (StringUtil.isNotBlank(value)) {
                     boolean isMatched = IS_MAIL_PATTERN.matcher(value).matches();
                     if (!isMatched) {
-                        throw new RuntimeException("邮箱格式不正确");
+                        throw new SmartException("邮箱格式不正确");
                     }
                 }
             }
@@ -364,13 +365,13 @@ public class BaseServiceImpl<D extends BaseDao<T>, T> extends ServiceImpl<D, T> 
                         //验证最大值
                         if (max != -1) {
                             if (bValue.compareTo(new BigDecimal(max)) > 0) {
-                                throw new RuntimeException("[" + f.getName() + "]最大值不能超过" + max);
+                                throw new SmartException("[" + f.getName() + "]最大值不能超过" + max);
                             }
                         }
                         //验证最小值
                         if (min != -1) {
                             if (bValue.compareTo(new BigDecimal(min)) < 0) {
-                                throw new RuntimeException("[" + f.getName() + "]最小值不能低于" + min);
+                                throw new SmartException("[" + f.getName() + "]最小值不能低于" + min);
                             }
                         }
                         //验证小数点后保留位数
@@ -381,7 +382,7 @@ public class BaseServiceImpl<D extends BaseDao<T>, T> extends ServiceImpl<D, T> 
                                 //小数点后有多少位
                                 int differ = (value.length() - num) - 1;
                                 if (differ > pointCount) {
-                                    throw new RuntimeException("[" + f.getName() + "]小数点后最多保留" + pointCount + "位");
+                                    throw new SmartException("[" + f.getName() + "]小数点后最多保留" + pointCount + "位");
                                 }
                             }
                         }
@@ -397,10 +398,10 @@ public class BaseServiceImpl<D extends BaseDao<T>, T> extends ServiceImpl<D, T> 
                                         if (targetNaN) {
                                             //转化成数字
                                             if (bValue.compareTo(new BigDecimal(target)) >= 0) {
-                                                throw new RuntimeException("[" + f.getName() + "]应小于" + target);
+                                                throw new SmartException("[" + f.getName() + "]应小于" + target);
                                             }
                                         } else {
-                                            throw new RuntimeException("[" + f.getName() + "]小于的值必须是数字类型");
+                                            throw new SmartException("[" + f.getName() + "]小于的值必须是数字类型");
                                         }
                                     }
                                 }
@@ -416,10 +417,10 @@ public class BaseServiceImpl<D extends BaseDao<T>, T> extends ServiceImpl<D, T> 
                                         if (targetNaN) {
                                             //转化成数字
                                             if (bValue.compareTo(new BigDecimal(target)) <= 0) {
-                                                throw new RuntimeException("[" + f.getName() + "]应大于" + target);
+                                                throw new SmartException("[" + f.getName() + "]应大于" + target);
                                             }
                                         } else {
-                                            throw new RuntimeException("[" + f.getName() + "]大于的值必须是数字类型");
+                                            throw new SmartException("[" + f.getName() + "]大于的值必须是数字类型");
                                         }
                                     }
                                 }
@@ -430,7 +431,7 @@ public class BaseServiceImpl<D extends BaseDao<T>, T> extends ServiceImpl<D, T> 
                         }
                     } else {
                         if (StringUtil.isNotBlank(value)) {
-                            throw new RuntimeException("[" + f.getName() + "]必须为数字");
+                            throw new SmartException("[" + f.getName() + "]必须为数字");
                         }
                     }
                 }
@@ -544,7 +545,7 @@ public class BaseServiceImpl<D extends BaseDao<T>, T> extends ServiceImpl<D, T> 
                     if (StringUtil.isNotBlank(column)) {
                         columns.add(column);
                     } else {
-                        throw new RuntimeException("排序字段异常");
+                        throw new SmartException("排序字段异常");
                     }
                 } else {
                     // 用户自定义字段
@@ -558,7 +559,7 @@ public class BaseServiceImpl<D extends BaseDao<T>, T> extends ServiceImpl<D, T> 
                 } else if (ORDER_DESC.equals(sortOrder.toLowerCase(Locale.ROOT))) {
                     wrapper.orderBy(true, false, StringUtil.join(columns, ","));
                 } else {
-                    throw new RuntimeException("排序类型异常");
+                    throw new SmartException("排序类型异常");
                 }
             }
         } else {
@@ -653,7 +654,7 @@ public class BaseServiceImpl<D extends BaseDao<T>, T> extends ServiceImpl<D, T> 
     }
 
     /**
-     * 删除之后处理
+     * 批量删除之后处理
      *
      * @param entity bean 实体
      * @param isReal 是否物理删除
@@ -662,7 +663,7 @@ public class BaseServiceImpl<D extends BaseDao<T>, T> extends ServiceImpl<D, T> 
     }
 
     /**
-     * 删除之后处理
+     * 通过主键ID删除之后处理
      *
      * @param id 主键
      */

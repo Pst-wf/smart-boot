@@ -79,15 +79,16 @@ function search() {
           class="pr-24px"
         >
 #if($column.components == "INPUT" || $column.components == "TEXTAREA")
-          <NInput v-model:value="model.${column.attrName}" :placeholder="${placeholder}" />
+          <NInput v-model:value="model.${column.attrName}" :placeholder="${placeholder}" clearable />
 #elseif($column.components == "INPUT-NUMBER")
 #if($column.isNumber)
-          <NInputNumber v-model:value="model.${column.attrName}" class="w-full" :placeholder="${placeholder}" />
+          <NInputNumber v-model:value="model.${column.attrName}" class="w-full" :placeholder="${placeholder}" clearable />
 #else
           <NInputNumber
               v-model:value="${column.attrName}InputNumber"
               class="w-full"
               :placeholder="${placeholder}"
+              clearable
               @update:value="val => {
                 model.${column.attrName} = val ? val.toString() : null;
               }"

@@ -186,4 +186,15 @@ public class RoleController {
         return Result.status(roleService.setRoleScopes(roleEntity));
     }
 
+    /**
+     * 修改状态
+     *
+     * @param entity bean实体
+     * @return String
+     */
+    @HasPermission("role:update")
+    @PostMapping("/updateStatus")
+    public String updateStatus(@RequestBody RoleEntity entity) {
+        return Result.status(roleService.updateStatus(entity));
+    }
 }

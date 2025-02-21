@@ -71,5 +71,13 @@ public interface MenuService extends BaseService<MenuEntity> {
      * @return int
      */
     int findNextOrderByParentId(String parentId);
+
+    /**
+     * 启用/停用
+     *
+     * @param entity bean实体
+     * @return boolean
+     */
+    boolean updateStatus(MenuEntity entity);
 }
 
