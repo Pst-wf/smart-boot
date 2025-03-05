@@ -3,6 +3,7 @@ package com.smart.system.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
+import com.smart.common.constant.SmartConstant;
 import com.smart.common.utils.CacheUtil;
 import com.smart.common.utils.ListUtil;
 import com.smart.common.utils.StringUtil;
@@ -152,6 +153,15 @@ public class DeptServiceImpl extends BaseServiceImpl<DeptDao, DeptEntity> implem
      * @param entity bean对象
      */
     private void beforeUpdate(DeptEntity entity) {
+        if (StringUtil.notBlankAndEquals(entity.getStatus(), SmartConstant.NO)) {
+            //验证该部门是否有人使用
+            QueryWrapper<DeptEntity> wrapper = new QueryWrapper<>();
+            wrapper.and(x-> x.like("ancestors", entity.getId()).or().eq("id", entity.getId()));
+            long count = baseMapper.checkDeptIdCanDisabled(wrapper);
+            if (count > 0) {
+                throw new SmartException("要禁用的机构下有用户存在，不可禁用！");
+            }
+        }
         if (StringUtil.isBlank(entity.getDeptCode())) {
             throw new SmartException("机构编码不能为空！");
         }
@@ -254,9 +264,19 @@ public class DeptServiceImpl extends BaseServiceImpl<DeptDao, DeptEntity> implem
         entity.setDeleteIds(deleteIds);
 
         //验证该部门是否有人使用
-        long count = identityInfoService.count(new LambdaQueryWrapper<IdentityEntity>().in(IdentityEntity::getDeptId, entity.getDeleteIds()).or().in(IdentityEntity::getOrganizationId, entity.getDeleteIds()));
-        if (count > 0) {
-            throw new SmartException("要删除的部门下有用户存在，不可删除！");
+        List<IdentityEntity> identityEntities = identityInfoService.list();
+        // 获取所有身份使用的部门ID
+        Set<String> set = identityEntities.stream().map(IdentityEntity::getDeptId).collect(Collectors.toSet());
+        if (!set.isEmpty()) {
+            List<DeptEntity> deptEntities = super.list(new LambdaQueryWrapper<DeptEntity>().in(DeptEntity::getId, set));
+            deptEntities.forEach(item -> {
+                List<String> ancestor = new ArrayList<>(Arrays.asList(item.getAncestors().split(",")));
+                ancestor.add(item.id);
+                List<String> ins = ListUtil.intersectionCollection(entity.getDeleteIds(), ancestor);
+                if (!ins.isEmpty()) {
+                    throw new SmartException("要删除的部门下有用户存在，不可删除！");
+                }
+            });
         }
     }
 
@@ -410,6 +430,15 @@ public class DeptServiceImpl extends BaseServiceImpl<DeptDao, DeptEntity> implem
     @Override
     @CacheEvict(cacheNames = "dept", key = "#entity.id")
     public boolean updateStatus(DeptEntity entity) {
+        if (StringUtil.notBlankAndEquals(entity.getStatus(), SmartConstant.NO)) {
+            //验证该部门是否有人使用
+            QueryWrapper<DeptEntity> wrapper = new QueryWrapper<>();
+            wrapper.and(x-> x.like("ancestors", entity.getId()).or().eq("id", entity.getId()));
+            long count = baseMapper.checkDeptIdCanDisabled(wrapper);
+            if (count > 0) {
+                throw new SmartException("要禁用的机构下有用户存在，不可禁用！");
+            }
+        }
         LambdaUpdateChainWrapper<DeptEntity> updateChainWrapper = new LambdaUpdateChainWrapper<>(baseMapper);
         return updateChainWrapper
                 .set(DeptEntity::getStatus, StringUtil.notBlankAndEquals(entity.getStatus(), YES) ? YES : NO)

@@ -54,4 +54,16 @@
         )
         SELECT * FROM cte;
     </select>
+
+    <select id="checkDeptIdCanDisabled" resultType="long">
+        SELECT
+        COUNT(0)
+        FROM
+        (
+        SELECT d.ancestors, d.id FROM sys_identity i LEFT JOIN sys_dept d ON i.dept_id = d.id
+        ) t
+        <if test="ew.customSqlSegment != null and ew.customSqlSegment != ''">
+            ${ew.customSqlSegment}
+        </if>
+    </select>
 </mapper>

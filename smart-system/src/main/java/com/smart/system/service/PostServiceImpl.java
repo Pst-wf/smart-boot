@@ -2,6 +2,7 @@ package com.smart.system.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
+import com.smart.common.constant.SmartConstant;
 import com.smart.common.utils.StringUtil;
 import com.smart.entity.system.IdentityEntity;
 import com.smart.entity.system.PostEntity;
@@ -49,6 +50,16 @@ public class PostServiceImpl extends BaseServiceImpl<PostDao, PostEntity> implem
                 }
             }
         }
+
+        if (!isAdd) {
+            if (StringUtil.notBlankAndEquals(entity.getStatus(), SmartConstant.NO)) {
+                //验证该部门是否有人使用
+                long count = identityInfoService.count(new LambdaQueryWrapper<IdentityEntity>().eq(IdentityEntity::getPostId, entity.getId()));
+                if (count > 0) {
+                    throw new SmartException("要禁用的岗位下有用户存在，不可禁用！");
+                }
+            }
+        }
     }
 
     /**
@@ -74,6 +85,13 @@ public class PostServiceImpl extends BaseServiceImpl<PostDao, PostEntity> implem
      */
     @Override
     public boolean updateStatus(PostEntity entity) {
+        if (StringUtil.notBlankAndEquals(entity.getStatus(), SmartConstant.NO)) {
+            //验证该部门是否有人使用
+            long count = identityInfoService.count(new LambdaQueryWrapper<IdentityEntity>().eq(IdentityEntity::getPostId, entity.getId()));
+            if (count > 0) {
+                throw new SmartException("要禁用的岗位下有用户存在，不可禁用！");
+            }
+        }
         LambdaUpdateChainWrapper<PostEntity> updateChainWrapper = new LambdaUpdateChainWrapper<>(baseMapper);
         return updateChainWrapper
                 .set(PostEntity::getStatus, StringUtil.notBlankAndEquals(entity.getStatus(), YES) ? YES : NO)

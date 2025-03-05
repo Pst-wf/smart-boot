@@ -41,4 +41,9 @@ public interface DeptDao extends BaseDao<DeptEntity> {
      * @return List
      */
     List<DeptEntity> findChildrenByParentIds(@Param("ids") List<String> ids);
+
+    /**
+     * 校验是否可禁用
+     */
+    long checkDeptIdCanDisabled(@Param(Constants.WRAPPER) QueryWrapper<DeptEntity> wrapper);
 }

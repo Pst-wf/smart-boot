@@ -3,6 +3,7 @@ package com.smart.system.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import com.github.pagehelper.Page;
+import com.smart.common.constant.SmartConstant;
 import com.smart.common.utils.CacheUtil;
 import com.smart.common.utils.ListUtil;
 import com.smart.common.utils.StringUtil;
@@ -72,6 +73,38 @@ public class RoleServiceImpl extends BaseServiceImpl<RoleDao, RoleEntity> implem
             x.setMenus(collect);
         });
         return page;
+    }
+
+    /**
+     * 保存之前处理
+     *
+     * @param entity bean 实体
+     * @param isAdd  是否新增
+     */
+    @Override
+    public void beforeSaveOrUpdate(RoleEntity entity, boolean isAdd) {
+        RoleEntity roleEntity = baseMapper.selectOne(new LambdaQueryWrapper<RoleEntity>().eq(RoleEntity::getRoleCode, entity.getRoleCode()).eq(RoleEntity::getIsDeleted, "0"));
+        if (roleEntity != null) {
+            if (isAdd) {
+                // 新增
+                throw new SmartException("角色编码已存在！");
+            } else {
+                // 编辑
+                if (!entity.getId().equals(roleEntity.getId())) {
+                    throw new SmartException("角色编码已存在！");
+                }
+            }
+        }
+
+        if (!isAdd) {
+            if (StringUtil.notBlankAndEquals(entity.getStatus(), SmartConstant.NO)) {
+                //验证该部门是否有人使用
+                long count = identityInfoService.count(new LambdaQueryWrapper<IdentityEntity>().eq(IdentityEntity::getRoleId, entity.getId()));
+                if (count > 0) {
+                    throw new SmartException("要禁用的角色下有用户存在，不可禁用！");
+                }
+            }
+        }
     }
 
     /**
@@ -211,6 +244,13 @@ public class RoleServiceImpl extends BaseServiceImpl<RoleDao, RoleEntity> implem
      */
     @Override
     public boolean updateStatus(RoleEntity entity) {
+        if (StringUtil.notBlankAndEquals(entity.getStatus(), SmartConstant.NO)) {
+            //验证该部门是否有人使用
+            long count = identityInfoService.count(new LambdaQueryWrapper<IdentityEntity>().eq(IdentityEntity::getRoleId, entity.getId()));
+            if (count > 0) {
+                throw new SmartException("要禁用的角色下有用户存在，不可禁用！");
+            }
+        }
         LambdaUpdateChainWrapper<RoleEntity> updateChainWrapper = new LambdaUpdateChainWrapper<>(baseMapper);
         return updateChainWrapper
                 .set(RoleEntity::getStatus, StringUtil.notBlankAndEquals(entity.getStatus(), YES) ? YES : NO)
