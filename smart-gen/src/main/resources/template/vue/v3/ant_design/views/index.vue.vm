@@ -346,7 +346,7 @@
       tableLoading.value = true;
 #set($listStr = "List")
       let res = await ${classname}Api.${classname}#if($isPage)Page#else${listStr}#end(queryForm);
-      tableData.value = res.data.records;
+      tableData.value = res.data#if($isPage).records#end;
       total.value = res.data.total;
     } catch (e) {
       smartSentry.captureError(e);

@@ -5,6 +5,7 @@
       :maskClosable="true"
       :width="960"
       centered
+      :get-container="SmartLoading.spin"
       @cancel="onClose"
   >
     <a-form ref="formRef" :labelCol="{ span: 4 }" :labelWrap="true" :model="form" :rules="rules" :disabled="disabled">

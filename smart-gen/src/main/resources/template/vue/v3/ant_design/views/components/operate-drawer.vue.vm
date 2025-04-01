@@ -5,6 +5,7 @@
       :title="disabled ? '查看' : form.id ? '编辑' : '新增'"
       :open="visible"
       :width="960"
+      :get-container="SmartLoading.spin"
       @close="onClose"
   >
     <a-form ref="formRef" :labelCol="{ span: 4 }" :labelWrap="true" :model="form" :rules="rules" :disabled="disabled">
