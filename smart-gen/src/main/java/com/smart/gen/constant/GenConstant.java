@@ -12,7 +12,10 @@ public class GenConstant {
      * 基础默认字段
      */
     public static final String[] DEFAULT_COLUMNS = {"id", "is_deleted", "create_by", "create_user", "create_dept", "create_organization", "create_date", "update_by", "update_date", "remarks"};
-
+    /**
+     * 需要校验长途的组件
+     */
+    public static final String[] MAX_LENGTH_CHECK_COMPONENTS = {"INPUT", "INPUT-NUMBER", "TEXTAREA", "EDITOR"};
     /**
      * Entity模板名称
      */

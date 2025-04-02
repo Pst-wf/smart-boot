@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringWriter;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -232,6 +233,7 @@ public class GenUtils {
         boolean hasQueryDate = false;
         boolean hasFormDate = false;
         boolean hasNotNull = false;
+        boolean hasCheckLength = false;
         boolean extentBaseEntity = false;
         boolean hasList = false;
         boolean hasQuery = false;
@@ -312,16 +314,24 @@ public class GenUtils {
             if (StringUtil.notBlankAndEquals(columnEntity.getIsPk(), "1")) {
                 pk = columnEntity;
             }
-            if ("1".equals(columnEntity.getIsNotNull())) {
-                hasNotNull = true;
-                if ("1".equals(columnEntity.getIsForm()) && !Arrays.asList(DEFAULT_COLUMNS).contains(columnEntity.getColumnName())) {
+
+            if ("1".equals(columnEntity.getIsForm()) && !Arrays.asList(DEFAULT_COLUMNS).contains(columnEntity.getColumnName())) {
+                boolean checkLength = Arrays.asList(MAX_LENGTH_CHECK_COMPONENTS).contains(columnEntity.getComponents()) && (
+                        columnEntity.getColumnLength() != null && new BigDecimal(columnEntity.getColumnLength()).compareTo(new BigDecimal(999999)) <= 0);
+                if ("1".equals(columnEntity.getIsNotNull()) || checkLength) {
+                    if ("1".equals(columnEntity.getIsNotNull())) {
+                        hasNotNull = true;
+                    }
+                    if (checkLength) {
+                        hasCheckLength = true;
+                        columnEntity.setIsCheckLength(true);
+                    }
                     validateColumns.add(columnEntity);
-                }
-            } else {
-                if ("1".equals(columnEntity.getIsForm()) && !Arrays.asList(DEFAULT_COLUMNS).contains(columnEntity.getColumnName())) {
+                } else {
                     unValidateColumns.add(columnEntity);
                 }
             }
+
             if (!hasBigDecimal && "BigDecimal".equals(columnEntity.getAttrType())) {
                 hasBigDecimal = true;
             }
@@ -518,6 +528,7 @@ public class GenUtils {
         map.put("pathName", StringUtil.uncapitalize(table.getClassName()));
         map.put("columns", columns);
         map.put("hasNotNull", hasNotNull);
+        map.put("hasCheckLength", hasCheckLength);
         map.put("hasBigDecimal", hasBigDecimal);
         map.put("hasDate", hasDate);
         map.put("hasQueryDate", hasQueryDate);

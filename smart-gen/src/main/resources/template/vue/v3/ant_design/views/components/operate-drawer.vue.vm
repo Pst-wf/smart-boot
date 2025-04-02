@@ -209,7 +209,10 @@
 
   const formRef = ref();
   const formDefault = {
-    id: null,
+    id: null#if($formColumns.size() > 0 || $uploadColumns.size() > 0),
+#else
+
+#end
 #foreach ($column in $formColumns)
     ${column.attrName}: null#if($foreach.hasNext),
 #else
@@ -227,16 +230,23 @@
 #end
   };
   let form = reactive({...formDefault});
-  const rules = {
+  const rules = #if($validateColumns.size() == 0){};
+#else{
 #foreach ($column in $validateColumns)
     ${column.attrName}: [
-      {required: true, message: '${column.comments}不能为空'}
+#if($column.isNotNull == "1")##
+     {required: true, message: '${column.comments}不能为空'}#if($column.isCheckLength),#end
+#end
+#if($column.isCheckLength)##
+     { max: $column.columnLength, message: '长度不能超过${column.columnLength}个字符', trigger: 'blur' },
+#end
     ]#if($foreach.hasNext),
 #else
 
 #end
 #end
   };
+#end
   function validateForm(formRef) {
     return new Promise((resolve) => {
       formRef

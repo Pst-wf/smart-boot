@@ -65,9 +65,9 @@ const { formRef, validate, restoreValidation, resetModel } = useNaiveForm();
 
 #if($validateColumns.size() > 0)
 /**
- * 默认不为空校验规则
+ * 校验规则
  */
-const { defaultRequiredRule } = useFormRules();
+const {#if(${hasNotNull}) defaultRequiredRule, #end#if(${hasCheckLength}) maxLengthRule#end } = useFormRules();
 
 #end
 /**
@@ -123,13 +123,15 @@ type RuleKey = Exclude<keyof Model, #foreach ($column in $unValidateColumns) '${
 /**
  * 表单校验规则
  */
-const rules: Record<RuleKey, App.Global.FormRule> = {#foreach ($column in $validateColumns)
-  ${column.attrName}: defaultRequiredRule#if($foreach.hasNext),
+const rules: Record<RuleKey, App.Global.FormRule | App.Global.FormRule[]> = #if($validateColumns.size() == 0){}#else{
+#foreach ($column in $validateColumns)
+  ${column.attrName}: [#if($column.isNotNull == "1")defaultRequiredRule#if($column.isCheckLength), #end#end#if($column.isCheckLength)maxLengthRule(${column.columnLength})#end]#if($foreach.hasNext),
 #else
 
 #end
 #end
 };
+#end
 
 #if($inputNumberColumns.size() > 0)
 /** 数字输入框字段特殊处理 */
@@ -245,7 +247,16 @@ watch(visible, () => {
              />
 #end
 #elseif($column.components == "TEXTAREA")
-             <NInput v-model:value="model.${column.attrName}" type="textarea" :placeholder="${placeholder}" clearable />
+             <NInput
+                v-model:value="model.${column.attrName}"
+                type="textarea"
+                show-count
+                :autosize="{
+                  minRows: 5
+                }"
+                :placeholder="${placeholder}"
+                clearable
+             />
 #elseif($column.components == "SELECT")
              <NSelect
                 v-model:value="model.${column.attrName}"

@@ -169,4 +169,11 @@ public class GenTableColumnEntity extends BaseIdEntity {
     @TableField(exist = false)
     @JSONField(serialize = false)
     private Boolean isNumber;
+
+    /**
+     * 是否校验长度
+     */
+    @TableField(exist = false)
+    @JSONField(serialize = false)
+    private Boolean isCheckLength;
 }
