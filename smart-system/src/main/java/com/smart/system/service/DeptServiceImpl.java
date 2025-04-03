@@ -1,8 +1,7 @@
 package com.smart.system.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.smart.common.constant.SmartConstant;
 import com.smart.common.utils.CacheUtil;
 import com.smart.common.utils.ListUtil;
@@ -13,9 +12,7 @@ import com.smart.entity.system.IdentityEntity;
 import com.smart.model.exception.SmartException;
 import com.smart.mybatis.service.impl.BaseServiceImpl;
 import com.smart.service.system.DeptService;
-import com.smart.service.system.IdentityInfoService;
 import com.smart.system.dao.DeptDao;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.stereotype.Service;
@@ -35,8 +32,6 @@ import static com.smart.common.constant.SmartConstant.*;
 @Service("deptService")
 @Transactional(rollbackFor = Exception.class)
 public class DeptServiceImpl extends BaseServiceImpl<DeptDao, DeptEntity> implements DeptService {
-    @Autowired
-    IdentityInfoService identityInfoService;
 
     /**
      * 集合
@@ -134,7 +129,7 @@ public class DeptServiceImpl extends BaseServiceImpl<DeptDao, DeptEntity> implem
         if (StringUtil.isBlank(entity.getDeptCode())) {
             throw new SmartException("机构编码不能为空！");
         }
-        DeptEntity one = super.getOne(new LambdaQueryWrapper<DeptEntity>().eq(DeptEntity::getDeptCode, entity.getDeptCode()));
+        DeptEntity one = Db.lambdaQuery(DeptEntity.class).eq(DeptEntity::getDeptCode, entity.getDeptCode()).one();
         if (one != null) {
             throw new SmartException("机构编码已存在！");
         }
@@ -156,7 +151,7 @@ public class DeptServiceImpl extends BaseServiceImpl<DeptDao, DeptEntity> implem
         if (StringUtil.notBlankAndEquals(entity.getStatus(), SmartConstant.NO)) {
             //验证该部门是否有人使用
             QueryWrapper<DeptEntity> wrapper = new QueryWrapper<>();
-            wrapper.and(x-> x.like("ancestors", entity.getId()).or().eq("id", entity.getId()));
+            wrapper.and(x -> x.like("ancestors", entity.getId()).or().eq("id", entity.getId()));
             long count = baseMapper.checkDeptIdCanDisabled(wrapper);
             if (count > 0) {
                 throw new SmartException("要禁用的机构下有用户存在，不可禁用！");
@@ -165,11 +160,11 @@ public class DeptServiceImpl extends BaseServiceImpl<DeptDao, DeptEntity> implem
         if (StringUtil.isBlank(entity.getDeptCode())) {
             throw new SmartException("机构编码不能为空！");
         }
-        DeptEntity one = super.getOne(new LambdaQueryWrapper<DeptEntity>().eq(DeptEntity::getDeptCode, entity.getDeptCode()));
+        DeptEntity one = Db.lambdaQuery(DeptEntity.class).eq(DeptEntity::getDeptCode, entity.getDeptCode()).one();
         if (one != null && !one.getId().equals(entity.getId())) {
             throw new SmartException("机构编码已存在！");
         }
-        DeptEntity dept = baseMapper.selectById(entity.getId());
+        DeptEntity dept = Db.getById(entity.getId(), DeptEntity.class);
         String parentId = entity.getParentId();
         String oldParentId = dept.getParentId();
         if (!oldParentId.equals(parentId)) {
@@ -178,12 +173,11 @@ public class DeptServiceImpl extends BaseServiceImpl<DeptDao, DeptEntity> implem
             if (StringUtil.notBlankAndEquals(parentId, entity.getId())) {
                 throw new SmartException("父级和本级不能为同一条数据！");
             }
-            List<DeptEntity> children = baseMapper.selectList(new LambdaQueryWrapper<DeptEntity>().like(DeptEntity::getAncestors, entity.getId()));
+            List<DeptEntity> children = Db.lambdaQuery(DeptEntity.class).like(DeptEntity::getAncestors, entity.getId()).list();
             List<String> childrenIds = children.stream().map(DeptEntity::getId).collect(Collectors.toList());
             if (childrenIds.contains(parentId)) {
                 //如果修改自己的parentId为自己的子集 则需要更新子集
-                LambdaUpdateChainWrapper<DeptEntity> updateChainWrapper = new LambdaUpdateChainWrapper<>(baseMapper);
-                updateChainWrapper
+                Db.lambdaUpdate(DeptEntity.class)
                         .set(DeptEntity::getParentId, dept.getParentId())
                         .set(DeptEntity::getAncestors, dept.getAncestors())
                         .eq(DeptEntity::getId, parentId)
@@ -264,11 +258,11 @@ public class DeptServiceImpl extends BaseServiceImpl<DeptDao, DeptEntity> implem
         entity.setDeleteIds(deleteIds);
 
         //验证该部门是否有人使用
-        List<IdentityEntity> identityEntities = identityInfoService.list();
+        List<IdentityEntity> identityEntities = Db.list(IdentityEntity.class);
         // 获取所有身份使用的部门ID
         Set<String> set = identityEntities.stream().map(IdentityEntity::getDeptId).collect(Collectors.toSet());
         if (!set.isEmpty()) {
-            List<DeptEntity> deptEntities = super.list(new LambdaQueryWrapper<DeptEntity>().in(DeptEntity::getId, set));
+            List<DeptEntity> deptEntities = Db.lambdaQuery(DeptEntity.class).in(DeptEntity::getId, set).list();
             deptEntities.forEach(item -> {
                 List<String> ancestor = new ArrayList<>(Arrays.asList(item.getAncestors().split(",")));
                 ancestor.add(item.id);
@@ -363,7 +357,7 @@ public class DeptServiceImpl extends BaseServiceImpl<DeptDao, DeptEntity> implem
                 }
             }
             if (ListUtil.isNotEmpty(selectIds)) {
-                List<DeptEntity> selectDept = super.list(new LambdaQueryWrapper<DeptEntity>().in(DeptEntity::getId, selectIds));
+                List<DeptEntity> selectDept = Db.lambdaQuery(DeptEntity.class).in(DeptEntity::getId, selectIds).list();
                 selectDept.forEach(dept -> {
                     // 存入缓存
                     CacheUtil.put("dept", dept.getId(), dept);
@@ -398,7 +392,7 @@ public class DeptServiceImpl extends BaseServiceImpl<DeptDao, DeptEntity> implem
             Arrays.asList(deptEntity.getAncestors().split(",")).forEach(x -> {
                 DeptEntity cacheDept = getCacheDept(x);
                 if (cacheDept != null) {
-                    sb.append(cacheDept.getDeptName()).append("/");
+                    sb.append(cacheDept.getDeptName()).append("-");
                 }
             });
             sb.append(deptEntity.getDeptName());
@@ -433,14 +427,13 @@ public class DeptServiceImpl extends BaseServiceImpl<DeptDao, DeptEntity> implem
         if (StringUtil.notBlankAndEquals(entity.getStatus(), SmartConstant.NO)) {
             //验证该部门是否有人使用
             QueryWrapper<DeptEntity> wrapper = new QueryWrapper<>();
-            wrapper.and(x-> x.like("ancestors", entity.getId()).or().eq("id", entity.getId()));
+            wrapper.and(x -> x.like("ancestors", entity.getId()).or().eq("id", entity.getId()));
             long count = baseMapper.checkDeptIdCanDisabled(wrapper);
             if (count > 0) {
                 throw new SmartException("要禁用的机构下有用户存在，不可禁用！");
             }
         }
-        LambdaUpdateChainWrapper<DeptEntity> updateChainWrapper = new LambdaUpdateChainWrapper<>(baseMapper);
-        return updateChainWrapper
+        return Db.lambdaUpdate(DeptEntity.class)
                 .set(DeptEntity::getStatus, StringUtil.notBlankAndEquals(entity.getStatus(), YES) ? YES : NO)
                 .eq(DeptEntity::getId, entity.getId())
                 .update();

@@ -2,8 +2,7 @@ package com.smart.system.service;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.smart.common.utils.*;
 import com.smart.entity.system.*;
 import com.smart.model.exception.SmartException;
@@ -13,15 +12,12 @@ import com.smart.model.route.RouterMeta;
 import com.smart.mybatis.service.impl.BaseServiceImpl;
 import com.smart.service.system.ButtonsService;
 import com.smart.service.system.MenuService;
-import com.smart.service.system.RoleButtonsService;
 import com.smart.service.system.ScopeService;
 import com.smart.system.dao.MenuDao;
-import com.smart.system.dao.RoleMenuDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -43,10 +39,6 @@ public class MenuServiceImpl extends BaseServiceImpl<MenuDao, MenuEntity> implem
     ButtonsService buttonsService;
     @Autowired
     ScopeService scopeService;
-    @Autowired
-    RoleButtonsService roleButtonsService;
-    @Resource
-    RoleMenuDao roleMenuDao;
 
     /**
      * 获取树形结构
@@ -88,13 +80,13 @@ public class MenuServiceImpl extends BaseServiceImpl<MenuDao, MenuEntity> implem
             // 默认权重是2
             entity.setWeight(MENU_WEIGHT_DEFAULT);
         }
-        MenuEntity one = super.getOne(new LambdaQueryWrapper<MenuEntity>().eq(MenuEntity::getRouteName, entity.getRouteName()).eq(MenuEntity::getIsDeleted, "0"));
+        MenuEntity one = Db.lambdaQuery(MenuEntity.class).eq(MenuEntity::getRouteName, entity.getRouteName()).one();
         // 校验按钮唯一
         List<ButtonsEntity> buttons = new ArrayList<>();
         if (ListUtil.isNotEmpty(entity.getButtons())) {
             Set<String> collect = entity.getButtons().stream().map(ButtonsEntity::getCode).collect(Collectors.toSet());
             if (!collect.isEmpty()) {
-                buttons = buttonsService.list(new LambdaQueryWrapper<ButtonsEntity>().in(ButtonsEntity::getCode, collect));
+                buttons = Db.lambdaQuery(ButtonsEntity.class).in(ButtonsEntity::getCode, collect).list();
             }
         }
         if (isAdd) {
@@ -136,8 +128,7 @@ public class MenuServiceImpl extends BaseServiceImpl<MenuDao, MenuEntity> implem
                     // 修改了父级
                     if (ids.contains(parentId)) {
                         //如果修改自己的parentId为自己的子集 则需要更新子集
-                        LambdaUpdateChainWrapper<MenuEntity> updateChainWrapper = new LambdaUpdateChainWrapper<>(baseMapper);
-                        updateChainWrapper.set(MenuEntity::getParentId, menu.getParentId()).eq(MenuEntity::getId, parentId).update();
+                        Db.lambdaUpdate(MenuEntity.class).set(MenuEntity::getParentId, menu.getParentId()).eq(MenuEntity::getId, parentId).update();
                     }
                 }
             }
@@ -154,7 +145,7 @@ public class MenuServiceImpl extends BaseServiceImpl<MenuDao, MenuEntity> implem
     public void afterSaveOrUpdate(MenuEntity entity, boolean isAdd) {
         if (!isAdd) {
             // 获取原按钮
-            List<ButtonsEntity> list = buttonsService.list(new LambdaQueryWrapper<ButtonsEntity>().eq(ButtonsEntity::getMenuId, entity.getId()));
+            List<ButtonsEntity> list = Db.lambdaQuery(ButtonsEntity.class).in(ButtonsEntity::getMenuId, entity.getId()).list();
             // 原的按钮集合
             Set<String> oldCodes = list.stream().map(ButtonsEntity::getCode).filter(StringUtil::isNotBlank).collect(Collectors.toSet());
             // 新的按钮集合
@@ -165,16 +156,14 @@ public class MenuServiceImpl extends BaseServiceImpl<MenuDao, MenuEntity> implem
             // 计算差集
             List<String> deleteCodes = ListUtil.subtractCollection(oldCodes, newCodes);
             if (!deleteCodes.isEmpty()) {
-                roleButtonsService.remove(new LambdaQueryWrapper<RoleButtonsEntity>().in(RoleButtonsEntity::getButtonCode, deleteCodes));
+                Db.remove(Db.lambdaQuery(RoleButtonsEntity.class).in(RoleButtonsEntity::getButtonCode, deleteCodes).getWrapper());
             }
             // 处理query
             if (entity.getQuery() == null) {
-                LambdaUpdateChainWrapper<MenuEntity> updateChainWrapper = new LambdaUpdateChainWrapper<>(baseMapper);
-                updateChainWrapper.set(MenuEntity::getQuery, null).eq(MenuEntity::getId, entity.getId()).update();
+                Db.lambdaUpdate(MenuEntity.class).set(MenuEntity::getQuery, null).eq(MenuEntity::getId, entity.getId()).update();
             }
         }
-
-        buttonsService.remove(new LambdaQueryWrapper<ButtonsEntity>().eq(ButtonsEntity::getMenuId, entity.getId()));
+        Db.remove(Db.lambdaQuery(ButtonsEntity.class).eq(ButtonsEntity::getMenuId, entity.getId()).getWrapper());
         if (ListUtil.isNotEmpty(entity.getButtons())) {
             ListUtil.forEach(entity.getButtons(), (index, item) -> {
                 item.setId(null);
@@ -220,16 +209,16 @@ public class MenuServiceImpl extends BaseServiceImpl<MenuDao, MenuEntity> implem
     @Override
     public void afterDelete(MenuEntity entity, boolean isReal) {
         //删除中间表
-        roleMenuDao.delete(new LambdaQueryWrapper<RoleMenuEntity>().in(RoleMenuEntity::getMenuId, entity.getDeleteIds()));
+        Db.remove(Db.lambdaQuery(RoleMenuEntity.class).in(RoleMenuEntity::getMenuId, entity.getDeleteIds()).getWrapper());
         //查询对应的按钮
-        List<ButtonsEntity> buttons = buttonsService.list(new LambdaQueryWrapper<ButtonsEntity>().in(ButtonsEntity::getMenuId, entity.getDeleteIds()));
+        List<ButtonsEntity> buttons = Db.lambdaQuery(ButtonsEntity.class).in(ButtonsEntity::getMenuId, entity.getDeleteIds()).list();
         if (!buttons.isEmpty()) {
             // 按钮codes集合
             Set<String> buttonCodes = buttons.stream().map(ButtonsEntity::getCode).filter(StringUtil::isNotBlank).collect(Collectors.toSet());
             // 删除按钮
             buttonsService.removeBatchByIds(buttons);
             // 删除按钮角色中间表
-            roleButtonsService.remove(new LambdaQueryWrapper<RoleButtonsEntity>().in(RoleButtonsEntity::getButtonCode, buttonCodes));
+            Db.remove(Db.lambdaQuery(RoleButtonsEntity.class).in(RoleButtonsEntity::getButtonCode, buttonCodes).getWrapper());
         }
     }
 
@@ -364,7 +353,7 @@ public class MenuServiceImpl extends BaseServiceImpl<MenuDao, MenuEntity> implem
                 Map<String, Object> map = new HashMap<>(0);
                 map.put("id", x.getId());
                 map.put("pId", x.getMenuId());
-                map.put("label", x.getName() + " - 【按钮】");
+                map.put("label", x.getName());
                 maps.add(map);
             }
         });
@@ -403,7 +392,7 @@ public class MenuServiceImpl extends BaseServiceImpl<MenuDao, MenuEntity> implem
                 Map<String, Object> map = new HashMap<>(0);
                 map.put("id", x.getId());
                 map.put("pId", x.getMenuId());
-                map.put("label", x.getScopeName() + " - 【数据权限】");
+                map.put("label", x.getScopeName());
                 maps.add(map);
             }
         });
@@ -419,7 +408,7 @@ public class MenuServiceImpl extends BaseServiceImpl<MenuDao, MenuEntity> implem
      */
     @Override
     public int findNextOrderByParentId(String parentId) {
-        List<MenuEntity> list = baseMapper.selectList(new LambdaQueryWrapper<MenuEntity>().eq(MenuEntity::getParentId, parentId).orderByDesc(MenuEntity::getOrder));
+        List<MenuEntity> list = Db.lambdaQuery(MenuEntity.class).eq(MenuEntity::getParentId, parentId).orderByDesc(MenuEntity::getOrder).list();
         return !list.isEmpty() ? list.get(0).getOrder() + 1 : 0;
     }
 
@@ -445,8 +434,7 @@ public class MenuServiceImpl extends BaseServiceImpl<MenuDao, MenuEntity> implem
      */
     @Override
     public boolean updateStatus(MenuEntity entity) {
-        LambdaUpdateChainWrapper<MenuEntity> updateChainWrapper = new LambdaUpdateChainWrapper<>(baseMapper);
-        return updateChainWrapper
+        return Db.lambdaUpdate(MenuEntity.class)
                 .set(MenuEntity::getStatus, StringUtil.notBlankAndEquals(entity.getStatus(), YES) ? YES : NO)
                 .eq(MenuEntity::getId, entity.getId())
                 .update();

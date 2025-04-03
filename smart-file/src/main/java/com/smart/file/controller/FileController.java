@@ -1,7 +1,7 @@
 package com.smart.file.controller;
 
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.smart.aop.log.LogType;
 import com.smart.aop.log.SaveLog;
 import com.smart.aop.permission.HasPermission;
@@ -31,8 +31,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static com.smart.common.constant.SmartConstant.NO;
 
 
 /**
@@ -181,7 +179,7 @@ public class FileController {
             throw new SmartException("文件编码为空！");
         }
         List<String> idsList = Arrays.asList(ids.split(","));
-        List<FileEntity> list = fileService.list(new LambdaQueryWrapper<FileEntity>().in(FileEntity::getId, idsList).eq(FileEntity::getIsDeleted, NO));
+        List<FileEntity> list = Db.lambdaQuery(FileEntity.class).in(FileEntity::getId, idsList).list();
         if (list.isEmpty()) {
             throw new SmartException("下载的文件不存在！");
         }

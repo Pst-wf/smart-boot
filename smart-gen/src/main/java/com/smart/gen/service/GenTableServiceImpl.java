@@ -1,14 +1,12 @@
 package com.smart.gen.service;
 
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.smart.common.utils.ListUtil;
 import com.smart.common.utils.StringUtil;
 import com.smart.common.utils.TreeUtil;
 import com.smart.entity.gen.GenTableColumnEntity;
 import com.smart.entity.gen.GenTableEntity;
-import com.smart.gen.dao.GenTableColumnDao;
 import com.smart.gen.dao.GenTableDao;
 import com.smart.gen.utils.GenUtils;
 import com.smart.model.exception.SmartException;
@@ -23,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.util.List;
@@ -40,8 +37,6 @@ import java.util.zip.ZipOutputStream;
 @Transactional(rollbackFor = Exception.class)
 public class GenTableServiceImpl extends BaseServiceImpl<GenTableDao, GenTableEntity> implements GenTableService {
 
-    @Resource
-    GenTableColumnDao genTableColumnDao;
     @Autowired
     GenTableColumnService genTableColumnService;
     @Autowired
@@ -66,7 +61,7 @@ public class GenTableServiceImpl extends BaseServiceImpl<GenTableDao, GenTableEn
             }
             table.setFrontType(entity.getFrontType());
             //查询列信息
-            List<GenTableColumnEntity> columns = genTableColumnDao.selectList(new LambdaQueryWrapper<GenTableColumnEntity>().eq(GenTableColumnEntity::getTableId, table.getId()).orderByAsc(GenTableColumnEntity::getColumnSort));
+            List<GenTableColumnEntity> columns = Db.lambdaQuery(GenTableColumnEntity.class).eq(GenTableColumnEntity::getTableId, table.getId()).orderByAsc(GenTableColumnEntity::getColumnSort).list();
             if (StringUtil.isNotBlank(table.getMenuId())) {
                 table.setMenu(menuService.getById(table.getMenuId()));
             }
@@ -90,7 +85,7 @@ public class GenTableServiceImpl extends BaseServiceImpl<GenTableDao, GenTableEn
             throw new SmartException("表不存在");
         }
         //查询列信息
-        List<GenTableColumnEntity> columns = genTableColumnDao.selectList(new LambdaQueryWrapper<GenTableColumnEntity>().eq(GenTableColumnEntity::getTableId, table.getId()).orderByAsc(GenTableColumnEntity::getColumnSort));
+        List<GenTableColumnEntity> columns = Db.lambdaQuery(GenTableColumnEntity.class).eq(GenTableColumnEntity::getTableId, table.getId()).orderByAsc(GenTableColumnEntity::getColumnSort).list();
         if (StringUtil.isNotBlank(table.getMenuId())) {
             table.setMenu(menuService.getById(table.getMenuId()));
         }
@@ -133,13 +128,11 @@ public class GenTableServiceImpl extends BaseServiceImpl<GenTableDao, GenTableEn
             }
         } else {
             if (StringUtil.isBlank(entity.getMenuId())) {
-                LambdaUpdateChainWrapper<GenTableEntity> updateChainWrapper = new LambdaUpdateChainWrapper<>(baseMapper);
-                updateChainWrapper.set(GenTableEntity::getMenuId, null).eq(GenTableEntity::getId, entity.getId()).update();
+                Db.lambdaUpdate(GenTableEntity.class).set(GenTableEntity::getMenuId, null).eq(GenTableEntity::getId, entity.getId()).update();
             }
 
             // 先清空所有字段的查询方式以及字典编码
-            LambdaUpdateChainWrapper<GenTableColumnEntity> updateChainWrapper = new LambdaUpdateChainWrapper<>(genTableColumnDao);
-            updateChainWrapper
+            Db.lambdaUpdate(GenTableColumnEntity.class)
                     .set(GenTableColumnEntity::getQueryType, null)
                     .set(GenTableColumnEntity::getDictCode, null)
                     .eq(GenTableColumnEntity::getTableId, entity.getId()).update();
@@ -175,7 +168,7 @@ public class GenTableServiceImpl extends BaseServiceImpl<GenTableDao, GenTableEn
         }
         table.setFrontType(frontType);
         //查询列信息
-        List<GenTableColumnEntity> columns = genTableColumnDao.selectList(new LambdaQueryWrapper<GenTableColumnEntity>().eq(GenTableColumnEntity::getTableId, table.getId()).orderByAsc(GenTableColumnEntity::getColumnSort));
+        List<GenTableColumnEntity> columns = Db.lambdaQuery(GenTableColumnEntity.class).eq(GenTableColumnEntity::getTableId, table.getId()).orderByAsc(GenTableColumnEntity::getColumnSort).list();
         if (StringUtil.isNotBlank(table.getMenuId())) {
             table.setMenu(menuService.getById(table.getMenuId()));
         }

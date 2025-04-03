@@ -1,14 +1,15 @@
 package com.smart.job.core.thread;
 
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.smart.common.utils.StringUtil;
+import com.smart.entity.job.JobGroupEntity;
+import com.smart.entity.job.JobRegistryEntity;
 import com.smart.job.core.biz.model.RegistryParam;
 import com.smart.job.core.biz.model.ReturnT;
 import com.smart.job.core.conf.XxlJobAdminConfig;
 import com.smart.job.core.enums.RegistryConfig;
-import com.smart.entity.job.JobGroupEntity;
-import com.smart.entity.job.JobRegistryEntity;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
@@ -23,13 +24,10 @@ import java.util.stream.Collectors;
  * @author xuxueli 2016-10-02 19:10:24
  */
 public class JobRegistryHelper {
-    private static Logger logger = LoggerFactory.getLogger(JobRegistryHelper.class);
+    private static final Logger logger = LoggerFactory.getLogger(JobRegistryHelper.class);
 
-    private static JobRegistryHelper instance = new JobRegistryHelper();
-
-    public static JobRegistryHelper getInstance() {
-        return instance;
-    }
+    @Getter
+    private static final JobRegistryHelper instance = new JobRegistryHelper();
 
     private ThreadPoolExecutor registryOrRemoveThreadPool = null;
     private Thread registryMonitorThread;
@@ -70,7 +68,7 @@ public class JobRegistryHelper {
 
                             // remove dead address (admin/executor)
                             List<String> ids = XxlJobAdminConfig.getAdminConfig().getJobRegistryDao().findDead(RegistryConfig.DEAD_TIMEOUT, new Date());
-                            if (ids != null && ids.size() > 0) {
+                            if (ids != null && !ids.isEmpty()) {
                                 XxlJobAdminConfig.getAdminConfig().getJobRegistryDao().removeDead(ids);
                             }
 
@@ -115,14 +113,14 @@ public class JobRegistryHelper {
                         }
                     } catch (Exception e) {
                         if (!toStop) {
-                            logger.error(">>>>>>>>>>> xxl-job, job registry monitor thread error:{}", e);
+                            logger.error(">>>>>>>>>>> xxl-job, job registry monitor thread error:{}", e.getMessage());
                         }
                     }
                     try {
                         TimeUnit.SECONDS.sleep(RegistryConfig.BEAT_TIMEOUT);
                     } catch (InterruptedException e) {
                         if (!toStop) {
-                            logger.error(">>>>>>>>>>> xxl-job, job registry monitor thread error:{}", e);
+                            logger.error(">>>>>>>>>>> xxl-job, job registry monitor thread error:{}", e.getMessage());
                         }
                     }
                 }
@@ -212,7 +210,7 @@ public class JobRegistryHelper {
         if (edited) {
             // Under consideration, prevent affecting core tables
             // 修改或新增
-            JobGroupEntity groupEntity = XxlJobAdminConfig.getAdminConfig().getJobGroupDao().selectOne(new LambdaQueryWrapper<JobGroupEntity>().eq(JobGroupEntity::getAppName, registryParam.getRegistryKey()).eq(JobGroupEntity::getIsDeleted, "0"));
+            JobGroupEntity groupEntity = Db.lambdaQuery(JobGroupEntity.class).eq(JobGroupEntity::getAppName, registryParam.getRegistryKey()).one();
             if (groupEntity == null) {
                 groupEntity = new JobGroupEntity();
             }
@@ -239,8 +237,5 @@ public class JobRegistryHelper {
             // 删除
             XxlJobAdminConfig.getAdminConfig().getJobGroupDao().changeStatus("0", registryParam.getRegistryKey());
         }
-
     }
-
-
 }

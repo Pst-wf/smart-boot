@@ -4,8 +4,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.smart.common.utils.*;
@@ -112,7 +112,7 @@ public class UserServiceImpl extends BaseServiceImpl<UserDao, UserEntity> implem
     public void beforeSaveOrUpdate(UserEntity entity, boolean isAdd) {
         if (isAdd) {
             // 新增
-            long count = super.count(new LambdaQueryWrapper<UserEntity>().eq(UserEntity::getUsername, entity.getUsername()));
+            long count = Db.lambdaQuery(UserEntity.class).eq(UserEntity::getUsername, entity.getUsername()).count();
             if (count > 0) {
                 throw new SmartException("该账号已被使用");
             }
@@ -129,7 +129,7 @@ public class UserServiceImpl extends BaseServiceImpl<UserDao, UserEntity> implem
             //判断是否修改账号
             if (StringUtil.isNotBlank(entity.getUsername())) {
                 if (!oldUsername.equals(entity.getUsername())) {
-                    long count = super.count(new LambdaQueryWrapper<UserEntity>().eq(UserEntity::getUsername, entity.getUsername()));
+                    long count = Db.lambdaQuery(UserEntity.class).eq(UserEntity::getUsername, entity.getUsername()).count();
                     if (count > 0) {
                         throw new SmartException("该账号已被使用");
                     }
@@ -195,9 +195,7 @@ public class UserServiceImpl extends BaseServiceImpl<UserDao, UserEntity> implem
             if (StringUtil.notBlankAndEquals(hasDeptPost, NO)) {
                 // 传过来的角色id
                 String role = entity.getRole();
-                List<IdentityEntity> list = identityInfoService.list(new LambdaQueryWrapper<IdentityEntity>()
-                        .eq(IdentityEntity::getUserId, entity.getId())
-                );
+                List<IdentityEntity> list = Db.lambdaQuery(IdentityEntity.class).eq(IdentityEntity::getUserId, entity.getId()).list();
                 if (StringUtil.isNotBlank(role)) {
                     // 若是单选模式 应该是 直接更新
                     list.forEach(x -> {
@@ -258,7 +256,7 @@ public class UserServiceImpl extends BaseServiceImpl<UserDao, UserEntity> implem
         boolean b = super.delete(entity);
         if (b) {
             //删除身份
-            identityInfoService.remove(new LambdaQueryWrapper<IdentityEntity>().in(IdentityEntity::getUserId, entity.getDeleteIds()));
+            Db.remove(Db.lambdaQuery(IdentityEntity.class).in(IdentityEntity::getUserId, entity.getDeleteIds()).getWrapper());
             // 清除所有身份缓存
             CacheUtil.clear("identity");
             // 清除用户缓存
@@ -360,7 +358,7 @@ public class UserServiceImpl extends BaseServiceImpl<UserDao, UserEntity> implem
                 }
             }
             if (ListUtil.isNotEmpty(selectIds)) {
-                List<UserEntity> selectUsers = super.list(new LambdaQueryWrapper<UserEntity>().in(UserEntity::getId, selectIds));
+                List<UserEntity> selectUsers = Db.lambdaQuery(UserEntity.class).in(UserEntity::getId, selectIds).list();
                 selectUsers.forEach(user -> {
                     // 存入缓存
                     CacheUtil.put("user", user.getId(), user);

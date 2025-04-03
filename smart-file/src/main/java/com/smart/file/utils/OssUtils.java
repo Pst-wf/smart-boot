@@ -2,12 +2,12 @@ package com.smart.file.utils;
 
 
 import com.amazonaws.services.s3.model.S3Object;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
+import com.smart.common.constant.FileConstant;
 import com.smart.common.utils.SpringUtil;
 import com.smart.common.utils.StringUtil;
 import com.smart.entity.file.FileEntity;
 import com.smart.entity.system.OssEntity;
-import com.smart.common.constant.FileConstant;
 import com.smart.model.exception.SmartException;
 import com.smart.service.system.OssService;
 import org.apache.commons.io.FileUtils;
@@ -165,7 +165,7 @@ public class OssUtils {
             if (StringUtil.isBlank(x.getUploadType())) {
                 break;
             } else {
-                OssEntity oss = getOssService().getOne(new LambdaQueryWrapper<OssEntity>().eq(OssEntity::getOssType, x.getUploadType()));
+                OssEntity oss = Db.lambdaQuery(OssEntity.class).eq(OssEntity::getOssType, x.getUploadType()).one();
                 if (oss == null) {
                     oss = getOssService().getCurrent();
                 }
@@ -224,7 +224,7 @@ public class OssUtils {
         if (StringUtil.isBlank(uploadType)) {
             oss = getOssService().getCurrent();
         } else {
-            oss = getOssService().getOne(new LambdaQueryWrapper<OssEntity>().eq(OssEntity::getOssType, uploadType));
+            oss = Db.lambdaQuery(OssEntity.class).eq(OssEntity::getOssType, uploadType).one();
         }
         if (oss != null) {
             switch (oss.getOssType()) {

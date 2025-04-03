@@ -2,7 +2,7 @@ package com.smart.system.service;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.smart.common.utils.AuthUtil;
 import com.smart.entity.system.UserConfigEntity;
 import com.smart.model.exception.SmartException;
@@ -29,7 +29,7 @@ public class UserConfigServiceImpl extends BaseServiceImpl<UserConfigDao, UserCo
      */
     @Override
     public boolean saveConfig(JSONObject jsonObject) {
-        UserConfigEntity one = super.getOne(new LambdaQueryWrapper<UserConfigEntity>().eq(UserConfigEntity::getUserId, AuthUtil.getUserId()));
+        UserConfigEntity one = Db.lambdaQuery(UserConfigEntity.class).eq(UserConfigEntity::getUserId, AuthUtil.getUserId()).one();
         if (one == null) {
             one = new UserConfigEntity();
             one.setUserId(AuthUtil.getUserId());
@@ -37,6 +37,7 @@ public class UserConfigServiceImpl extends BaseServiceImpl<UserConfigDao, UserCo
         one.setConfigValue(jsonObject.toJSONString());
         return super.saveOrUpdate(one);
     }
+
     /**
      * 保存 naive-ui 用户配置
      *
@@ -45,7 +46,7 @@ public class UserConfigServiceImpl extends BaseServiceImpl<UserConfigDao, UserCo
      */
     @Override
     public boolean saveNaiveUiConfig(JSONObject jsonObject) {
-        UserConfigEntity one = super.getOne(new LambdaQueryWrapper<UserConfigEntity>().eq(UserConfigEntity::getUserId, AuthUtil.getUserId()));
+        UserConfigEntity one = Db.lambdaQuery(UserConfigEntity.class).eq(UserConfigEntity::getUserId, AuthUtil.getUserId()).one();
         if (one == null) {
             one = new UserConfigEntity();
             one.setUserId(AuthUtil.getUserId());
@@ -53,6 +54,7 @@ public class UserConfigServiceImpl extends BaseServiceImpl<UserConfigDao, UserCo
         one.setNaiveUiConfigValue(jsonObject.toJSONString());
         return super.saveOrUpdate(one);
     }
+
     /**
      * 保存国际化
      *
@@ -61,7 +63,7 @@ public class UserConfigServiceImpl extends BaseServiceImpl<UserConfigDao, UserCo
      */
     @Override
     public boolean saveLangConfig(JSONObject jsonObject) {
-        UserConfigEntity one = super.getOne(new LambdaQueryWrapper<UserConfigEntity>().eq(UserConfigEntity::getUserId, AuthUtil.getUserId()));
+        UserConfigEntity one = Db.lambdaQuery(UserConfigEntity.class).eq(UserConfigEntity::getUserId, AuthUtil.getUserId()).one();
         if (one == null) {
             one = new UserConfigEntity();
             one.setUserId(AuthUtil.getUserId());
@@ -81,7 +83,7 @@ public class UserConfigServiceImpl extends BaseServiceImpl<UserConfigDao, UserCo
         if (array == null) {
             throw new SmartException("快捷入口设置获取失败！");
         }
-        UserConfigEntity one = super.getOne(new LambdaQueryWrapper<UserConfigEntity>().eq(UserConfigEntity::getUserId, AuthUtil.getUserId()));
+        UserConfigEntity one = Db.lambdaQuery(UserConfigEntity.class).eq(UserConfigEntity::getUserId, AuthUtil.getUserId()).one();
         if (one == null) {
             one = new UserConfigEntity();
             one.setUserId(AuthUtil.getUserId());
@@ -101,7 +103,7 @@ public class UserConfigServiceImpl extends BaseServiceImpl<UserConfigDao, UserCo
         if (array == null) {
             throw new SmartException("快捷入口设置获取失败！");
         }
-        UserConfigEntity one = super.getOne(new LambdaQueryWrapper<UserConfigEntity>().eq(UserConfigEntity::getUserId, AuthUtil.getUserId()));
+        UserConfigEntity one = Db.lambdaQuery(UserConfigEntity.class).eq(UserConfigEntity::getUserId, AuthUtil.getUserId()).one();
         if (one == null) {
             one = new UserConfigEntity();
             one.setUserId(AuthUtil.getUserId());

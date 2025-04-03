@@ -1,7 +1,7 @@
 package com.smart.message.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.smart.common.utils.AuthUtil;
@@ -86,8 +86,7 @@ public class MessageUserServiceImpl extends BaseServiceImpl<MessageUserDao, Mess
         if (ListUtil.isEmpty(messageUserEntity.getDeleteIds())) {
             throw new SmartException("请至少选择一条数据");
         }
-        LambdaUpdateChainWrapper<MessageUserEntity> wrapper = new LambdaUpdateChainWrapper<>(baseMapper);
-        return wrapper.in(MessageUserEntity::getId, messageUserEntity.getDeleteIds())
+        return Db.lambdaUpdate(MessageUserEntity.class).in(MessageUserEntity::getId, messageUserEntity.getDeleteIds())
                 .set(MessageUserEntity::getDeletedStatus, messageUserEntity.getDeletedStatus())
                 .update();
     }
@@ -103,8 +102,7 @@ public class MessageUserServiceImpl extends BaseServiceImpl<MessageUserDao, Mess
         if (ListUtil.isEmpty(messageUserEntity.getSelectIds())) {
             throw new SmartException("请至少选择一条数据");
         }
-        LambdaUpdateChainWrapper<MessageUserEntity> wrapper = new LambdaUpdateChainWrapper<>(baseMapper);
-        return wrapper.in(MessageUserEntity::getId, messageUserEntity.getSelectIds())
+        return Db.lambdaUpdate(MessageUserEntity.class).in(MessageUserEntity::getId, messageUserEntity.getSelectIds())
                 .set(MessageUserEntity::getIsRead, YES)
                 .update();
     }
@@ -129,7 +127,7 @@ public class MessageUserServiceImpl extends BaseServiceImpl<MessageUserDao, Mess
         QueryWrapper<MessageUserEntity> wrapper = new QueryWrapper<>();
         wrapper = initWrapper(entity, wrapper);
         wrapper = initWrapperAfter(entity, wrapper);
-        wrapper.eq("deleted_status","0");
+        wrapper.eq("deleted_status", NO);
         List<MessageUserEntity> receive = baseMapper.findReceive(wrapper, entity);
         return receive.size();
     }

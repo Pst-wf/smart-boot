@@ -2,7 +2,7 @@ package com.smart.file.service;
 
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.deepoove.poi.XWPFTemplate;
 import com.deepoove.poi.config.Configure;
 import com.smart.common.constant.FileConstant;
@@ -459,7 +459,7 @@ public class FileServiceImpl extends BaseServiceImpl<FileDao, FileEntity> implem
                 if (fileEntity == null) {
                     throw new SmartException("文件不存在！");
                 }
-                OssEntity current = ossService.getOne(new LambdaQueryWrapper<OssEntity>().eq(OssEntity::getOssType, fileEntity.getUploadType()));
+                OssEntity current = Db.lambdaQuery(OssEntity.class).eq(OssEntity::getOssType, fileEntity.getUploadType()).one();
                 // 保存逻辑
                 URL netUrl = new URL(vo.getUrl());
                 InputStream inputStream = netUrl.openStream();
@@ -648,7 +648,7 @@ public class FileServiceImpl extends BaseServiceImpl<FileDao, FileEntity> implem
      */
     @Override
     public List<FileEntity> cloneFile(List<String> fileIds, String filePath) {
-        List<FileEntity> list = super.list(new LambdaQueryWrapper<FileEntity>().in(FileEntity::getId, fileIds));
+        List<FileEntity> list = Db.lambdaQuery(FileEntity.class).in(FileEntity::getId, fileIds).list();
         List<File> fileList = new ArrayList<>();
         try {
             for (FileEntity fileEntity : list) {

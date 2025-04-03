@@ -1,7 +1,7 @@
 package com.smart.auth.service;
 
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.smart.auth.model.SmartFrontUser;
 import com.smart.auth.model.SmartUser;
 import com.smart.auth.utils.TokenUtil;
@@ -16,7 +16,6 @@ import com.smart.model.exception.SmartException;
 import com.smart.model.response.r.ResultCode;
 import com.smart.service.system.ConfigService;
 import com.smart.service.system.FrontUserService;
-import com.smart.service.system.TenantService;
 import com.smart.service.system.UserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,8 +48,6 @@ public class SmartUserDetailsServiceImpl implements SmartUserDetailsService {
     @Autowired
     FrontUserService frontUserService;
     @Autowired
-    TenantService tenantService;
-    @Autowired
     ConfigService configService;
     @Autowired
     RedisUtil redisUtil;
@@ -76,7 +73,7 @@ public class SmartUserDetailsServiceImpl implements SmartUserDetailsService {
         }
         System.err.println("【登录的后台用户的tenantId: " + tenantId + "】");
         // 获取租户信息
-        TenantEntity tenant = tenantService.getOne(new LambdaQueryWrapper<TenantEntity>().eq(TenantEntity::getTenantId, tenantId));
+        TenantEntity tenant = Db.lambdaQuery(TenantEntity.class).eq(TenantEntity::getTenantId, tenantId).one();
         if (TokenUtil.judgeTenant(tenant)) {
             throw new SmartException(ResultCode.USER_HAS_NO_TENANT_PERMISSION);
         }
@@ -121,7 +118,7 @@ public class SmartUserDetailsServiceImpl implements SmartUserDetailsService {
         }
         System.err.println("【登录的后台用户的tenantId: " + tenantId + "】");
         // 获取租户信息
-        TenantEntity tenant = tenantService.getOne(new LambdaQueryWrapper<TenantEntity>().eq(TenantEntity::getTenantId, tenantId));
+        TenantEntity tenant = Db.lambdaQuery(TenantEntity.class).eq(TenantEntity::getTenantId, tenantId).one();
         if (TokenUtil.judgeTenant(tenant)) {
             throw new SmartException(ResultCode.USER_HAS_NO_TENANT_PERMISSION);
         }
@@ -163,7 +160,7 @@ public class SmartUserDetailsServiceImpl implements SmartUserDetailsService {
         String organizationId = null;
         String organizationName = null;
         //根据用户名查询是否有用户
-        UserEntity user = userService.getOne(new LambdaQueryWrapper<UserEntity>().eq(UserEntity::getUsername, username));
+        UserEntity user = Db.lambdaQuery(UserEntity.class).eq(UserEntity::getUsername, username).one();
         if (user == null) {
             throw new SmartException(ResultCode.USER_NOT_FOUND);
         }
@@ -258,7 +255,7 @@ public class SmartUserDetailsServiceImpl implements SmartUserDetailsService {
         System.err.println("【登录的前台用户的username: " + username + "】");
         System.err.println("【登录的前台用户的tenantId: " + tenantId + "】");
         //根据用户名查询是否有用户
-        FrontUserEntity user = frontUserService.getOne(new LambdaQueryWrapper<FrontUserEntity>().eq(FrontUserEntity::getUsername, username));
+        FrontUserEntity user = Db.lambdaQuery(FrontUserEntity.class).eq(FrontUserEntity::getUsername, username).one();
         if (user == null) {
             throw new SmartException(ResultCode.USER_NOT_FOUND);
         }
@@ -305,7 +302,7 @@ public class SmartUserDetailsServiceImpl implements SmartUserDetailsService {
         String organizationId = null;
         String organizationName = null;
         //根据用户名查询是否有用户
-        UserEntity user = userService.getOne(new LambdaQueryWrapper<UserEntity>().eq(UserEntity::getWxOpenid, openId));
+        UserEntity user = Db.lambdaQuery(UserEntity.class).eq(UserEntity::getWxOpenid, openId).one();
         if (user == null) {
             return null;
         }
@@ -400,7 +397,7 @@ public class SmartUserDetailsServiceImpl implements SmartUserDetailsService {
         System.err.println("【登录的前台用户的openId: " + openId + "】");
         System.err.println("【登录的前台用户的tenantId: " + tenantId + "】");
         //根据用户名查询是否有用户
-        FrontUserEntity user = frontUserService.getOne(new LambdaQueryWrapper<FrontUserEntity>().eq(FrontUserEntity::getWxOpenid, openId));
+        FrontUserEntity user = Db.lambdaQuery(FrontUserEntity.class).eq(FrontUserEntity::getWxOpenid, openId).one();
         if (user == null) {
             return null;
         }

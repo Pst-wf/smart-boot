@@ -1,11 +1,10 @@
 package com.smart.gateway.config;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.smart.common.constant.FileConstant;
 import com.smart.common.utils.ListUtil;
 import com.smart.entity.system.OssEntity;
 import com.smart.gateway.interceptor.SmartInterceptor;
-import com.smart.service.system.OssService;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,13 +28,11 @@ public class InterceptorConfig implements WebMvcConfigurer {
 
     @Autowired
     SmartInterceptor interceptor;
-    @Autowired
-    OssService ossService;
 
     @Override
     public void addResourceHandlers(@NotNull ResourceHandlerRegistry registry) {
         log.error(">>>>>>>>>>> 本地上传文件路径代理");
-        List<OssEntity> local = ossService.list(new LambdaQueryWrapper<OssEntity>().eq(OssEntity::getOssType, FileConstant.OSS_TYPE_0));
+        List<OssEntity> local = Db.lambdaQuery(OssEntity.class).eq(OssEntity::getOssType, FileConstant.OSS_TYPE_0).list();
         local.stream().collect(Collectors.groupingBy(OssEntity::getBucket)).forEach((key, value) -> {
             if (ListUtil.isNotEmpty(value)) {
                 // 相同访问路径取第一个

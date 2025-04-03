@@ -1,7 +1,6 @@
 package com.smart.system.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.smart.common.constant.SmartConstant;
 import com.smart.common.utils.CacheUtil;
 import com.smart.common.utils.ListUtil;
@@ -114,8 +113,7 @@ public class RegionServiceImpl extends BaseServiceImpl<RegionDao, RegionEntity> 
      */
     @Override
     public boolean updateStatus(RegionEntity entity) {
-        LambdaUpdateChainWrapper<RegionEntity> updateChainWrapper = new LambdaUpdateChainWrapper<>(baseMapper);
-        return updateChainWrapper
+        return Db.lambdaUpdate(RegionEntity.class)
                 .set(RegionEntity::getStatus, StringUtil.notBlankAndEquals(entity.getStatus(), YES) ? YES : NO)
                 .eq(RegionEntity::getId, entity.getId())
                 .update();
@@ -186,12 +184,11 @@ public class RegionServiceImpl extends BaseServiceImpl<RegionDao, RegionEntity> 
             if (StringUtil.notBlankAndEquals(parentId, entity.getId())) {
                 throw new SmartException("父级和本级不能为同一条数据！");
             }
-            List<RegionEntity> children = baseMapper.selectList(new LambdaQueryWrapper<RegionEntity>().like(RegionEntity::getAncestors, entity.getId()));
+            List<RegionEntity> children = Db.lambdaQuery(RegionEntity.class).like(RegionEntity::getAncestors, entity.getId()).list();
             List<String> childrenIds = children.stream().map(RegionEntity::getId).collect(Collectors.toList());
             if (childrenIds.contains(parentId)) {
                 //如果修改自己的parentId为自己的子集 则需要更新子集
-                LambdaUpdateChainWrapper<RegionEntity> updateChainWrapper = new LambdaUpdateChainWrapper<>(baseMapper);
-                updateChainWrapper
+                Db.lambdaUpdate(RegionEntity.class)
                         .set(RegionEntity::getParentId, region.getParentId())
                         .set(RegionEntity::getAncestors, region.getAncestors())
                         .set(RegionEntity::getLevel, region.getLevel())
@@ -291,7 +288,7 @@ public class RegionServiceImpl extends BaseServiceImpl<RegionDao, RegionEntity> 
                 x.setLevel(1);
             } else {
                 x.setAncestors(parent.getAncestors() + "," + parent.getId());
-                x.setLevel(parent.getLevel()+1);
+                x.setLevel(parent.getLevel() + 1);
             }
             if (x.getChildren() != null && !x.getChildren().isEmpty()) {
                 handleList(x.getChildren(), x);

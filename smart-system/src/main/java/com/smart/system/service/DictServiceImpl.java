@@ -1,6 +1,6 @@
 package com.smart.system.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.smart.common.utils.*;
 import com.smart.entity.system.DictEntity;
 import com.smart.model.exception.SmartException;
@@ -81,7 +81,7 @@ public class DictServiceImpl extends BaseServiceImpl<DictDao, DictEntity> implem
                 code = entity.getDictCode();
             }
             List<DictEntity> values = getDictByParentId(parent.getId());
-            if(values.isEmpty()){
+            if (values.isEmpty()) {
                 CacheUtil.put("dict", code, values);
             }
         }
@@ -102,7 +102,7 @@ public class DictServiceImpl extends BaseServiceImpl<DictDao, DictEntity> implem
             }
         }
         if (StringUtil.isNotBlank(entity.getDictCode())) {
-            DictEntity dictEntity = baseMapper.selectOne(new LambdaQueryWrapper<DictEntity>().eq(DictEntity::getDictCode, entity.getDictCode()).eq(DictEntity::getIsDeleted, "0"));
+            DictEntity dictEntity = Db.lambdaQuery(DictEntity.class).eq(DictEntity::getDictCode, entity.getDictCode()).one();
             if (dictEntity != null) {
                 if (isAdd) {
                     // 新增
@@ -138,7 +138,7 @@ public class DictServiceImpl extends BaseServiceImpl<DictDao, DictEntity> implem
      */
     @Override
     public boolean delete(DictEntity entity) {
-        List<DictEntity> list = super.list(new LambdaQueryWrapper<DictEntity>().in(DictEntity::getId, entity.getDeleteIds()));
+        List<DictEntity> list = Db.lambdaQuery(DictEntity.class).in(DictEntity::getId, entity.getDeleteIds()).list();
         List<String> codes = new ArrayList<>();
         for (DictEntity dictEntity : list) {
             if (StringUtil.isBlank(dictEntity.getDictCode())) {
@@ -158,7 +158,7 @@ public class DictServiceImpl extends BaseServiceImpl<DictDao, DictEntity> implem
         if (b) {
             //删除子集
             entity.getDeleteIds().forEach(d -> {
-                super.remove(new LambdaQueryWrapper<DictEntity>().like(DictEntity::getAncestors, d));
+                Db.remove(Db.lambdaQuery(DictEntity.class).like(DictEntity::getAncestors, d).getWrapper());
             });
             // 清楚缓存
             CacheUtil.evictKeys("dict", codes);
@@ -170,7 +170,7 @@ public class DictServiceImpl extends BaseServiceImpl<DictDao, DictEntity> implem
     public List<DictEntity> getDictByCode(String code) {
         List<DictEntity> dictList = CacheUtil.get("dict", code, List.class);
         if (ListUtil.isEmpty(dictList)) {
-            List<DictEntity> list = super.list(new LambdaQueryWrapper<DictEntity>().eq(DictEntity::getDictCode, code).orderByAsc(DictEntity::getSort));
+            List<DictEntity> list = Db.lambdaQuery(DictEntity.class).eq(DictEntity::getDictCode, code).orderByAsc(DictEntity::getSort).list();
             if (ListUtil.isNotEmpty(list)) {
                 dictList = getDictByParentId(list.get(0).getId());
                 CacheUtil.put("dict", code, dictList);
@@ -202,7 +202,7 @@ public class DictServiceImpl extends BaseServiceImpl<DictDao, DictEntity> implem
      */
     @Override
     public List<DictEntity> getDictByParentId(String parentId) {
-        List<DictEntity> list = super.list(new LambdaQueryWrapper<DictEntity>().like(DictEntity::getAncestors, parentId).orderByAsc(DictEntity::getSort));
+        List<DictEntity> list = Db.lambdaQuery(DictEntity.class).like(DictEntity::getAncestors, parentId).orderByAsc(DictEntity::getSort).list();
         DictEntity parent = super.getById(parentId);
         if (parent == null) {
             throw new SmartException("获取字典为空！");
@@ -299,7 +299,7 @@ public class DictServiceImpl extends BaseServiceImpl<DictDao, DictEntity> implem
      */
     @Override
     public List<DictEntity> getValues(String id) {
-        List<DictEntity> list = super.list(new LambdaQueryWrapper<DictEntity>().like(DictEntity::getAncestors, id).orderByAsc(DictEntity::getSort));
+        List<DictEntity> list = Db.lambdaQuery(DictEntity.class).like(DictEntity::getAncestors, id).orderByAsc(DictEntity::getSort).list();
         list.forEach(x -> {
             x.setOldDictName(x.getDictName());
             x.setOldDictValue(x.getDictValue());

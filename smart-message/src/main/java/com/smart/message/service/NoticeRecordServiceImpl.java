@@ -1,6 +1,6 @@
 package com.smart.message.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.smart.common.constant.SmartConstant;
 import com.smart.common.utils.ListUtil;
 import com.smart.common.utils.StringUtil;
@@ -14,8 +14,6 @@ import com.smart.model.exception.SmartException;
 import com.smart.mybatis.service.impl.BaseServiceImpl;
 import com.smart.service.message.NoticeRecordService;
 import com.smart.service.message.NoticeRefService;
-import com.smart.service.system.IdentityInfoService;
-import com.smart.service.system.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,8 +35,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class NoticeRecordServiceImpl extends BaseServiceImpl<NoticeRecordDao, NoticeRecordEntity> implements NoticeRecordService {
 
-    private final IdentityInfoService identityInfoService;
-    private final UserService userService;
     private final NoticeRefService noticeRefService;
 
     /**
@@ -72,22 +68,22 @@ public class NoticeRecordServiceImpl extends BaseServiceImpl<NoticeRecordDao, No
                     List<IdentityEntity> identities = new ArrayList<>();
                     if (entity.getReleaseType().equals(MessageConstant.NOTICE_RELEASE_TYPE_DEPT)) {
                         // 通过部门查找用户
-                        identities = identityInfoService.list(new LambdaQueryWrapper<IdentityEntity>().in(IdentityEntity::getDeptId, list));
+                        identities = Db.lambdaQuery(IdentityEntity.class).in(IdentityEntity::getDeptId, list).list();
                     }
                     if (entity.getReleaseType().equals(MessageConstant.NOTICE_RELEASE_TYPE_POST)) {
                         // 通过岗位查找用户
-                        identities = identityInfoService.list(new LambdaQueryWrapper<IdentityEntity>().in(IdentityEntity::getPostId, list));
+                        identities = Db.lambdaQuery(IdentityEntity.class).in(IdentityEntity::getPostId, list).list();
                     }
                     if (entity.getReleaseType().equals(MessageConstant.NOTICE_RELEASE_TYPE_ROLE)) {
                         // 通过角色查找用户
-                        identities = identityInfoService.list(new LambdaQueryWrapper<IdentityEntity>().in(IdentityEntity::getRoleId, list));
+                        identities = Db.lambdaQuery(IdentityEntity.class).in(IdentityEntity::getRoleId, list).list();
                     }
                     Set<String> set = identities.stream().map(IdentityEntity::getUserId).collect(Collectors.toSet());
                     if (!set.isEmpty()) {
                         //查询有效用户
-                        List<UserEntity> userList = userService.list(new LambdaQueryWrapper<UserEntity>()
-                                .eq(UserEntity::getUserStatus, SmartConstant.YES)
-                                .in(UserEntity::getId, set));
+                        List<UserEntity> userList = Db.lambdaQuery(UserEntity.class).eq(UserEntity::getUserStatus, SmartConstant.YES)
+                                .in(UserEntity::getId, set).list();
+
                         userIds = userList.stream().map(UserEntity::getId).collect(Collectors.toList());
                     }
                     break;

@@ -1,13 +1,11 @@
 package com.smart.system.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.smart.entity.system.RoleScopeEntity;
 import com.smart.entity.system.ScopeEntity;
 import com.smart.mybatis.service.impl.BaseServiceImpl;
-import com.smart.service.system.RoleScopeService;
 import com.smart.service.system.ScopeService;
 import com.smart.system.dao.ScopeDao;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,15 +20,13 @@ import java.util.List;
 @Service("scopeService")
 @Transactional(rollbackFor = Exception.class)
 public class ScopeServiceImpl extends BaseServiceImpl<ScopeDao, ScopeEntity> implements ScopeService {
-    @Autowired
-    private RoleScopeService roleScopeService;
 
 
     @Override
     public boolean delete(ScopeEntity entity) {
         boolean b = super.delete(entity);
         if (b) {
-            roleScopeService.remove(new LambdaQueryWrapper<RoleScopeEntity>().in(RoleScopeEntity::getScopeId, entity.getDeleteIds()));
+            Db.remove(Db.lambdaQuery(RoleScopeEntity.class).in(RoleScopeEntity::getScopeId, entity.getDeleteIds()).getWrapper());
         }
         return b;
     }

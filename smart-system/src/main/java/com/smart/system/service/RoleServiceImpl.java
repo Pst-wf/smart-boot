@@ -1,7 +1,6 @@
 package com.smart.system.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.github.pagehelper.Page;
 import com.smart.common.constant.SmartConstant;
 import com.smart.common.utils.CacheUtil;
@@ -40,8 +39,6 @@ public class RoleServiceImpl extends BaseServiceImpl<RoleDao, RoleEntity> implem
     MenuService menuService;
     @Autowired
     RoleMenuService roleMenuService;
-    @Autowired
-    IdentityInfoService identityInfoService;
     @Autowired
     RoleScopeService roleScopeService;
     @Autowired
@@ -83,7 +80,7 @@ public class RoleServiceImpl extends BaseServiceImpl<RoleDao, RoleEntity> implem
      */
     @Override
     public void beforeSaveOrUpdate(RoleEntity entity, boolean isAdd) {
-        RoleEntity roleEntity = baseMapper.selectOne(new LambdaQueryWrapper<RoleEntity>().eq(RoleEntity::getRoleCode, entity.getRoleCode()).eq(RoleEntity::getIsDeleted, "0"));
+        RoleEntity roleEntity = Db.lambdaQuery(RoleEntity.class).eq(RoleEntity::getRoleCode, entity.getRoleCode()).one();
         if (roleEntity != null) {
             if (isAdd) {
                 // 新增
@@ -99,7 +96,7 @@ public class RoleServiceImpl extends BaseServiceImpl<RoleDao, RoleEntity> implem
         if (!isAdd) {
             if (StringUtil.notBlankAndEquals(entity.getStatus(), SmartConstant.NO)) {
                 //验证该部门是否有人使用
-                long count = identityInfoService.count(new LambdaQueryWrapper<IdentityEntity>().eq(IdentityEntity::getRoleId, entity.getId()));
+                long count = Db.lambdaQuery(IdentityEntity.class).eq(IdentityEntity::getRoleId, entity.getId()).count();
                 if (count > 0) {
                     throw new SmartException("要禁用的角色下有用户存在，不可禁用！");
                 }
@@ -116,7 +113,7 @@ public class RoleServiceImpl extends BaseServiceImpl<RoleDao, RoleEntity> implem
     @Override
     public void beforeDelete(RoleEntity entity, boolean isReal) {
         //验证该角色是否有人使用
-        long count = identityInfoService.count(new LambdaQueryWrapper<IdentityEntity>().in(IdentityEntity::getRoleId, entity.getDeleteIds()));
+        long count = Db.lambdaQuery(IdentityEntity.class).in(IdentityEntity::getRoleId, entity.getDeleteIds()).count();
         if (count > 0) {
             throw new SmartException("要删除的角色已被使用，不可删除！");
         }
@@ -130,7 +127,7 @@ public class RoleServiceImpl extends BaseServiceImpl<RoleDao, RoleEntity> implem
      */
     @Override
     public void afterDelete(RoleEntity entity, boolean isReal) {
-        roleMenuService.remove(new LambdaQueryWrapper<RoleMenuEntity>().in(RoleMenuEntity::getRoleId, entity.getDeleteIds()));
+        Db.remove(Db.lambdaQuery(RoleMenuEntity.class).in(RoleMenuEntity::getRoleId, entity.getDeleteIds()).getWrapper());
     }
 
     /**
@@ -142,7 +139,7 @@ public class RoleServiceImpl extends BaseServiceImpl<RoleDao, RoleEntity> implem
     @Override
     public boolean setRoleMenus(RoleEntity roleEntity) {
         //移除原来的角色菜单
-        roleMenuService.remove(new LambdaQueryWrapper<RoleMenuEntity>().in(RoleMenuEntity::getRoleId, roleEntity.getId()));
+        Db.remove(Db.lambdaQuery(RoleMenuEntity.class).in(RoleMenuEntity::getRoleId, roleEntity.getId()).getWrapper());
         if (ListUtil.isNotEmpty(roleEntity.getMenuIds())) {
             List<RoleMenuEntity> roleMenus = new ArrayList<>();
             roleEntity.getMenuIds().forEach(x -> {
@@ -167,7 +164,7 @@ public class RoleServiceImpl extends BaseServiceImpl<RoleDao, RoleEntity> implem
         // 清空缓存
         CacheUtil.evict("buttons", roleEntity.getId());
         //移除原来的角色按钮
-        roleButtonsService.remove(new LambdaQueryWrapper<RoleButtonsEntity>().in(RoleButtonsEntity::getRoleId, roleEntity.getId()));
+        Db.remove(Db.lambdaQuery(RoleButtonsEntity.class).in(RoleButtonsEntity::getRoleId, roleEntity.getId()).getWrapper());
         if (ListUtil.isNotEmpty(roleEntity.getButtonIds())) {
             List<ButtonsEntity> buttons = buttonsService.listByIds(roleEntity.getButtonIds());
             if (ListUtil.isNotEmpty(buttons)) {
@@ -195,7 +192,7 @@ public class RoleServiceImpl extends BaseServiceImpl<RoleDao, RoleEntity> implem
         // 清除缓存
         CacheUtil.evict("scope", roleEntity.getId());
         //移除原来的角色数据权限
-        roleScopeService.remove(new LambdaQueryWrapper<RoleScopeEntity>().in(RoleScopeEntity::getRoleId, roleEntity.getId()));
+        Db.remove(Db.lambdaQuery(RoleScopeEntity.class).in(RoleScopeEntity::getRoleId, roleEntity.getId()).getWrapper());
         if (ListUtil.isNotEmpty(roleEntity.getScopeIds())) {
             List<ScopeEntity> scopes = scopeService.listByIds(roleEntity.getScopeIds());
             if (ListUtil.isNotEmpty(scopes)) {
@@ -246,13 +243,12 @@ public class RoleServiceImpl extends BaseServiceImpl<RoleDao, RoleEntity> implem
     public boolean updateStatus(RoleEntity entity) {
         if (StringUtil.notBlankAndEquals(entity.getStatus(), SmartConstant.NO)) {
             //验证该部门是否有人使用
-            long count = identityInfoService.count(new LambdaQueryWrapper<IdentityEntity>().eq(IdentityEntity::getRoleId, entity.getId()));
+            long count = Db.lambdaQuery(IdentityEntity.class).eq(IdentityEntity::getRoleId, entity.getId()).count();
             if (count > 0) {
                 throw new SmartException("要禁用的角色下有用户存在，不可禁用！");
             }
         }
-        LambdaUpdateChainWrapper<RoleEntity> updateChainWrapper = new LambdaUpdateChainWrapper<>(baseMapper);
-        return updateChainWrapper
+        return Db.lambdaUpdate(RoleEntity.class)
                 .set(RoleEntity::getStatus, StringUtil.notBlankAndEquals(entity.getStatus(), YES) ? YES : NO)
                 .eq(RoleEntity::getId, entity.getId())
                 .update();

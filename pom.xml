@@ -46,7 +46,8 @@
         <fastjson.version>1.2.83</fastjson.version>
         <jedis.version>2.4.2</jedis.version>
         <mysql.version>8.0.31</mysql.version>
-        <mybatisplus.version>3.5.1</mybatisplus.version>
+        <mybatis.version>3.5.13</mybatis.version>
+        <mybatisplus.version>3.5.3.2</mybatisplus.version>
         <pagehelper.version>1.4.7</pagehelper.version>
         <codec.version>1.14</codec.version>
         <commons.io.version>2.7</commons.io.version>
@@ -191,6 +192,11 @@
             <version>${mysql.version}</version>
         </dependency>
         <!-- Mybatis-Plus -->
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
+            <version>${mybatis.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>

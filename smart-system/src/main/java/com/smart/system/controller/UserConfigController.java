@@ -1,7 +1,7 @@
 package com.smart.system.controller;
 
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.smart.common.utils.AuthUtil;
 import com.smart.entity.system.UserConfigEntity;
 import com.smart.model.response.r.Result;
@@ -28,7 +28,7 @@ public class UserConfigController {
      */
     @GetMapping("/get")
     public String get() {
-        return Result.data(userConfigService.getOne(new LambdaQueryWrapper<UserConfigEntity>().eq(UserConfigEntity::getUserId, AuthUtil.getUserId())));
+        return Result.data(Db.lambdaQuery(UserConfigEntity.class).eq(UserConfigEntity::getUserId, AuthUtil.getUserId()).one());
     }
 
     /**

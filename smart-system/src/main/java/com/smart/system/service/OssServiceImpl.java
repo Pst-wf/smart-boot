@@ -1,17 +1,16 @@
 package com.smart.system.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
-import com.smart.common.utils.ObjectUtil;
+import com.smart.common.utils.CacheUtil;
 import com.smart.common.utils.StringUtil;
+import com.smart.entity.system.OssEntity;
 import com.smart.model.exception.SmartException;
 import com.smart.mybatis.service.impl.BaseServiceImpl;
-import com.smart.common.utils.CacheUtil;
-import com.smart.system.dao.OssDao;
-import com.smart.entity.system.OssEntity;
 import com.smart.service.system.OssService;
+import com.smart.system.dao.OssDao;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,7 +35,7 @@ public class OssServiceImpl extends BaseServiceImpl<OssDao, OssEntity> implement
     @Override
     public Page<OssEntity> findPage(OssEntity entity) {
         QueryWrapper<OssEntity> wrapper = new QueryWrapper<>();
-        if(StringUtil.isBlank(entity.getSortField()) && StringUtil.isBlank(entity.getSortOrder()) ){
+        if (StringUtil.isBlank(entity.getSortField()) && StringUtil.isBlank(entity.getSortOrder())) {
             entity.setSortField(OssEntity.Fields.ossType);
             entity.setSortOrder("ASC");
         }
@@ -74,7 +73,7 @@ public class OssServiceImpl extends BaseServiceImpl<OssDao, OssEntity> implement
         boolean b;
         String ossStatus = entity.getOssStatus();
         if (YES.equals(ossStatus)) {
-            long count = super.count(new LambdaQueryWrapper<OssEntity>().eq(OssEntity::getOssStatus, YES));
+            long count = Db.lambdaQuery(OssEntity.class).eq(OssEntity::getOssStatus, YES).count();
             if (count > 0) {
                 throw new SmartException("同时最多启用一个对象存储方式");
             }
@@ -95,7 +94,7 @@ public class OssServiceImpl extends BaseServiceImpl<OssDao, OssEntity> implement
     public OssEntity getCurrent() {
         Object o = CacheUtil.get("oss", "config");
         if (o == null) {
-            return super.getOne(new LambdaQueryWrapper<OssEntity>().eq(OssEntity::getOssStatus, "1"));
+            return Db.lambdaQuery(OssEntity.class).eq(OssEntity::getOssStatus, YES).one();
         } else {
             return (OssEntity) o;
         }

@@ -1,7 +1,7 @@
 package com.smart.system.service;
 
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.smart.common.constant.SmartConstant;
 import com.smart.common.utils.*;
 import com.smart.entity.system.ConfigEntity;
@@ -55,7 +55,7 @@ public class ConfigServiceImpl extends BaseServiceImpl<ConfigDao, ConfigEntity> 
         if (ListUtil.isEmpty(entity.getDeleteIds())) {
             throw new SmartException("至少选择一条删除！");
         }
-        List<ConfigEntity> list = super.list(new LambdaQueryWrapper<ConfigEntity>().in(ConfigEntity::getId, entity.getDeleteIds()));
+        List<ConfigEntity> list = Db.lambdaQuery(ConfigEntity.class).in(ConfigEntity::getId, entity.getDeleteIds()).list();
         List<String> keys = list.stream().map(ConfigEntity::getConfigKey).collect(Collectors.toList());
         boolean delete = super.delete(entity);
         if (delete) {
@@ -73,7 +73,7 @@ public class ConfigServiceImpl extends BaseServiceImpl<ConfigDao, ConfigEntity> 
      */
     @Override
     public void beforeSaveOrUpdate(ConfigEntity entity, boolean isAdd) {
-        List<ConfigEntity> list = super.list(new LambdaQueryWrapper<ConfigEntity>().eq(ConfigEntity::getConfigKey, entity.getConfigKey()));
+        List<ConfigEntity> list = Db.lambdaQuery(ConfigEntity.class).eq(ConfigEntity::getConfigKey, entity.getConfigKey()).list();
         if (isAdd) {
             if (!list.isEmpty()) {
                 throw new SmartException("保存失败，当前KEY已存在！");
@@ -95,7 +95,7 @@ public class ConfigServiceImpl extends BaseServiceImpl<ConfigDao, ConfigEntity> 
     public String getConfig(String key) {
         ConfigEntity config = CacheUtil.get("config", key, ConfigEntity.class);
         if (config == null) {
-            List<ConfigEntity> list = super.list(new LambdaQueryWrapper<ConfigEntity>().eq(ConfigEntity::getConfigKey, key));
+            List<ConfigEntity> list = Db.lambdaQuery(ConfigEntity.class).eq(ConfigEntity::getConfigKey, key).list();
             if (ListUtil.isNotEmpty(list)) {
                 CacheUtil.put("config", list.get(0).getConfigKey(), list.get(0));
                 return list.get(0).getConfigValue();
@@ -114,7 +114,7 @@ public class ConfigServiceImpl extends BaseServiceImpl<ConfigDao, ConfigEntity> 
      */
     @Override
     public Map<String, String> getSystemConfigMap() {
-        List<ConfigEntity> list = super.list(new LambdaQueryWrapper<ConfigEntity>().eq(ConfigEntity::getIsSystem, SmartConstant.YES));
+        List<ConfigEntity> list = Db.lambdaQuery(ConfigEntity.class).eq(ConfigEntity::getIsSystem, SmartConstant.YES).list();
         String keys = list.stream().map(ConfigEntity::getConfigKey).collect(Collectors.joining(","));
         return StringUtil.isNotBlank(keys) ? getConfigByKeys(keys) : Collections.emptyMap();
     }
@@ -130,7 +130,7 @@ public class ConfigServiceImpl extends BaseServiceImpl<ConfigDao, ConfigEntity> 
         if (StringUtil.isBlank(configEntity.getConfigKey())) {
             throw new SmartException("参数Key不能为空");
         }
-        ConfigEntity one = super.getOne(new LambdaQueryWrapper<ConfigEntity>().eq(ConfigEntity::getConfigKey, configEntity.getConfigKey()));
+        ConfigEntity one = Db.lambdaQuery(ConfigEntity.class).eq(ConfigEntity::getConfigKey, configEntity.getConfigKey()).one();
         if (one == null) {
             throw new SmartException("【" + configEntity.getConfigKey() + "】] 不存在");
         }

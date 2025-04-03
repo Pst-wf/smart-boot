@@ -1,11 +1,10 @@
 package com.smart.auth.config;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.smart.common.constant.FileConstant;
 import com.smart.common.gateway.provider.AuthProvider;
 import com.smart.common.utils.ListUtil;
 import com.smart.entity.system.OssEntity;
-import com.smart.service.system.OssService;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -34,14 +33,14 @@ public class SmartResourceServerConfiguration extends ResourceServerConfigurerAd
      * 自定义登录成功处理器
      */
     private AuthenticationSuccessHandler appLoginInSuccessHandler;
-    private OssService ossService;
 
     @Override
     @SneakyThrows
     public void configure(HttpSecurity http) {
         String[] defaultSkip = AuthProvider.getDefaultSkipUrl().toArray(new String[0]);
         List<String> skipUrls = ListUtil.newArrayList(defaultSkip);
-        List<OssEntity> local = ossService.list(new LambdaQueryWrapper<OssEntity>().eq(OssEntity::getOssType, FileConstant.OSS_TYPE_0));
+
+        List<OssEntity> local = Db.lambdaQuery(OssEntity.class).eq(OssEntity::getOssType, FileConstant.OSS_TYPE_0).list();
         local.stream().collect(Collectors.groupingBy(OssEntity::getBucket)).forEach((key, value) -> {
             if (ListUtil.isNotEmpty(value)) {
                 // 相同访问路径取第一个
