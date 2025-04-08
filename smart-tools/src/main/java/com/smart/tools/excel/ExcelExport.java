@@ -7,6 +7,8 @@ import com.smart.model.excel.annotation.ExcelField.Align;
 import com.smart.model.excel.annotation.ExcelField.Type;
 import com.smart.model.excel.annotation.ExcelFields;
 import com.smart.model.excel.fieldtype.FieldType;
+import com.smart.model.exception.SmartException;
+import com.smart.service.system.ConfigService;
 import com.smart.service.system.DictService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
@@ -44,6 +46,16 @@ public class ExcelExport implements Closeable {
             dictService = SpringUtil.getBean(DictService.class);
         }
         return dictService;
+    }
+
+
+    private static ConfigService configService;
+
+    private static ConfigService getConfigService() {
+        if (configService == null) {
+            configService = SpringUtil.getBean(ConfigService.class);
+        }
+        return configService;
     }
 
     /**
@@ -549,6 +561,13 @@ public class ExcelExport implements Closeable {
      * @return list 数据列表
      */
     public <E> ExcelExport setDataList(List<E> list) {
+        String exportLength = getConfigService().getConfig("export_length");
+        if (StringUtil.isNotBlank(exportLength)) {
+            int length = Integer.parseInt(exportLength);
+            if (list.size() > length) {
+                throw new SmartException("一次最多导出" + length + "条数据");
+            }
+        }
         for (E e : list) {
             int column = 0;
             Row row = this.addRow();
