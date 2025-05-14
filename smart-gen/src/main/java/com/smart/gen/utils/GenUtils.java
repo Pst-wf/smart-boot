@@ -273,6 +273,10 @@ public class GenUtils {
         List<GenTableColumnEntity> notInColumns = new ArrayList<>();
         // In查询
         List<GenTableColumnEntity> inColumns = new ArrayList<>();
+        // Like_In_And查询
+        List<GenTableColumnEntity> likeInAndColumns = new ArrayList<>();
+        // Like_In_Or查询
+        List<GenTableColumnEntity> likeInOrColumns = new ArrayList<>();
         // 国际化字段集合
         List<GenTableColumnEntity> i18n = new ArrayList<>();
         List<GenTableColumnEntity> i18nForm = new ArrayList<>();
@@ -449,6 +453,28 @@ public class GenUtils {
                         inBean.setComments(inComments);
                         inColumns.add(inBean);
                         break;
+                    case "LIKE_IN_AND":
+                        GenTableColumnEntity likeInAndBean = (GenTableColumnEntity) ObjectUtil.copyBean(columnEntity);
+                        if (likeInAndBean.getAttrType().equals("Date")) {
+                            likeInAndBean.setAttrType("String");
+                        }
+                        String likeInAndAttrName = columnEntity.getAttrName() + "likeInAndList";
+                        String likeInAndComments = columnEntity.getComments() + "likeInAnd查询集合";
+                        likeInAndBean.setAttrName(likeInAndAttrName);
+                        likeInAndBean.setComments(likeInAndComments);
+                        likeInAndColumns.add(likeInAndBean);
+                        break;
+                    case "LIKE_IN_OR":
+                        GenTableColumnEntity likeInOrBean = (GenTableColumnEntity) ObjectUtil.copyBean(columnEntity);
+                        if (likeInOrBean.getAttrType().equals("Date")) {
+                            likeInOrBean.setAttrType("String");
+                        }
+                        String likeInOrAttrName = columnEntity.getAttrName() + "likeInOrList";
+                        String likeInOrComments = columnEntity.getComments() + "likeInOr查询集合";
+                        likeInOrBean.setAttrName(likeInOrAttrName);
+                        likeInOrBean.setComments(likeInOrComments);
+                        likeInOrColumns.add(likeInOrBean);
+                        break;
                     default:
                         queryColumns.add(columnEntity);
                         break;
@@ -572,6 +598,8 @@ public class GenUtils {
         map.put("betweenColumns", betweenColumns);
         map.put("notInColumns", notInColumns);
         map.put("inColumns", inColumns);
+        map.put("likeInAndColumns", likeInAndColumns);
+        map.put("likeInOrColumns", likeInOrColumns);
         map.put("menu", table.getMenu());
         map.put("hasMenu", table.getMenu() != null);
         map.put("hasEditor", hasEditor);

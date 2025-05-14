@@ -265,9 +265,6 @@
 #end
   // ------------------------ 查询表单 ------------------------
   const queryFormState = {
-#set($check1 = $betweenColumns.size() > 0 || $inColumns.size() > 0 || $notInColumns.size() > 0)
-#set($check2 = $inColumns.size() > 0 || $notInColumns.size() > 0)
-#set($check3 = $notInColumns.size() > 0)
 #foreach ($column in $queryColumns)
     // ${column.comments}
     ${column.attrName}: null,
@@ -280,9 +277,17 @@
     // ${inColumn.comments}
     ${inColumn.attrName}: null,
 #end
-#foreach ($column in $notInColumns)
+#foreach ($notInColumn in $notInColumns)
     // ${notInColumn.comments}
     ${notInColumn.attrName}: null,
+#end
+#foreach ($likeInAndColumn in $likeInAndColumns)
+    // ${likeInAndColumn.comments}
+    ${likeInAndColumn.attrName}: null,
+#end
+#foreach ($likeInOrColumn in $likeInOrColumns)
+    // ${likeInOrColumn.comments}
+    ${likeInOrColumn.attrName}: null,
 #end
 #if($isPage)
     // 页数

@@ -20,7 +20,9 @@ public enum QueryType {
     GT(),
     GE(),
     LT(),
-    LE();
+    LE(),
+    LIKE_IN_AND(),
+    LIKE_IN_OR();
 
     QueryType() {
     }

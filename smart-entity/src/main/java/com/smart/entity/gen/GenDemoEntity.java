@@ -119,7 +119,7 @@ public class GenDemoEntity extends BaseEntity {
 	/**
 	 * 复选框In查询集合
 	 */
-	@Column(name = "table_column7", queryType = QueryType.IN)
+	@Column(name = "table_column7", queryType = QueryType.LIKE_IN_OR)
 	@TableField(exist = false)
 	private List<String> tableColumn7InList;
 

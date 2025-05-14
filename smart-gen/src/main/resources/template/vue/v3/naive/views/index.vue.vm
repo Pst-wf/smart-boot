@@ -60,22 +60,23 @@ const { columns, columnChecks, data, loading, getData,#if($isPage) mobilePaginat
     // 排序字段
     sortField: null,
     // 排序规则
-    sortOrder: null#if($queryColumns.size() > 0 || $betweenColumns.size() > 0 || $inColumns.size() > 0 || $notInColumns.size() > 0),
+    sortOrder: null#if($queryColumns.size() > 0 || $betweenColumns.size() > 0 || $inColumns.size() > 0 || $notInColumns.size() > 0 || $likeInAndColumns.size() > 0 || $likeInOrColumns.size() > 0),
 #else
 
 #end
     // 如果要在Form中使用searchParams，则需要定义以下属性，并且该值为null
     // 该值不能未定义，否则Form中的属性将不起作用
-#set($check1 = $betweenColumns.size() > 0 || $inColumns.size() > 0 || $notInColumns.size() > 0)
-#set($check2 = $inColumns.size() > 0 || $notInColumns.size() > 0)
-#set($check3 = $notInColumns.size() > 0)
+#set($check1 = $betweenColumns.size() > 0 || $inColumns.size() > 0 || $notInColumns.size() > 0 || $likeInAndColumns.size() > 0 || $likeInOrColumns.size() > 0)
+#set($check2 = $inColumns.size() > 0 || $notInColumns.size() > 0 || $likeInAndColumns.size() > 0 || $likeInOrColumns.size() > 0)
+#set($check3 = $notInColumns.size() > 0 || $likeInAndColumns.size() > 0 || $likeInOrColumns.size() > 0)
+#set($check4 = $likeInAndColumns.size() > 0 || $likeInOrColumns.size() > 0)
+#set($check5 = $likeInOrColumns.size() > 0)
 #foreach ($column in $queryColumns)
     // ${column.comments}
     ${column.attrName}: null#if($foreach.hasNext),
 #end
 #end#if($queryColumns.size() > 0 && $check1),
 #else
-
 #end
 #foreach ($betweenColumn in $betweenColumns)
     // ${betweenColumn.comments}
@@ -83,7 +84,6 @@ const { columns, columnChecks, data, loading, getData,#if($isPage) mobilePaginat
 #end
 #end#if($betweenColumns.size() > 0 && $check2),
 #else
-
 #end
 #foreach ($inColumn in $inColumns)
     // ${inColumn.comments}
@@ -91,14 +91,29 @@ const { columns, columnChecks, data, loading, getData,#if($isPage) mobilePaginat
 #end
 #end#if($inColumns.size() > 0 && $check3),
 #else
-
 #end
-#foreach ($column in $notInColumns)
+#foreach ($notInColumn in $notInColumns)
     // ${notInColumn.comments}
     ${notInColumn.attrName}: null#if($foreach.hasNext),
-#else
-
 #end
+#end#if($notInColumns.size() > 0 && $check4),
+#else
+#end
+#foreach ($likeInAndColumn in $likeInAndColumns)
+    // ${likeInAndColumn.comments}
+    ${likeInAndColumn.attrName}: null#if($foreach.hasNext),
+#end
+#end#if($likeInAndColumns.size() > 0 && $check5),
+#else
+#end
+#foreach ($likeInOrColumn in $likeInOrColumns)
+    // ${likeInOrColumn.comments}
+    ${likeInOrColumn.attrName}: null#if($foreach.hasNext),
+#else
+#end
+#end
+#if($queryColumns.size() > 0 || $betweenColumns.size() > 0 || $inColumns.size() > 0 || $notInColumns.size() > 0 || $likeInAndColumns.size() > 0 || $likeInOrColumns.size() > 0)
+
 #end
   },
   columns: () => [

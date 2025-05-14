@@ -525,6 +525,56 @@ public class BaseServiceImpl<D extends BaseDao<T>, T> extends ServiceImpl<D, T> 
                                     break;
                                 }
                             }
+                        case LIKE_IN_OR:
+                            if (value.getClass().equals(ArrayList.class)) {
+                                List<?> collect = ((ArrayList<?>) value).stream().filter(Objects::nonNull).collect(Collectors.toList());
+                                if (!collect.isEmpty()) {
+                                    wrapper.and(s -> {
+                                        for (int i = 0; i < collect.size(); i++) {
+                                            Object o = collect.get(i);
+                                            if (i != collect.size() - 1) {
+                                                s = s.like(column, o.toString()).or();
+                                            } else {
+                                                s = s.like(column, o.toString());
+                                            }
+                                        }
+                                    });
+                                    break;
+                                }
+                            } else if (value.getClass().equals(String.class)) {
+                                List<String> list = Arrays.asList(((String) value).split(v.separator()));
+                                if (!list.isEmpty()) {
+                                    wrapper.and(s -> {
+                                        for (int i = 0; i < list.size(); i++) {
+                                            Object o = list.get(i);
+                                            if (i != list.size() - 1) {
+                                                s = s.like(column, o.toString()).or();
+                                            } else {
+                                                s = s.like(column, o.toString());
+                                            }
+                                        }
+                                    });
+                                    break;
+                                }
+                            }
+                        case LIKE_IN_AND:
+                            if (value.getClass().equals(ArrayList.class)) {
+                                List<?> collect = ((ArrayList<?>) value).stream().filter(Objects::nonNull).collect(Collectors.toList());
+                                if (!collect.isEmpty()) {
+                                    for (Object o : collect) {
+                                        wrapper.like(column, o.toString());
+                                    }
+                                    break;
+                                }
+                            } else if (value.getClass().equals(String.class)) {
+                                List<String> list = Arrays.asList(((String) value).split(v.separator()));
+                                if (!list.isEmpty()) {
+                                    for (String o : list) {
+                                        wrapper.like(column, o);
+                                    }
+                                    break;
+                                }
+                            }
                         default:
                     }
                 }

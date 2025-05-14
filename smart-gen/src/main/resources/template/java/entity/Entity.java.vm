@@ -104,6 +104,24 @@ public class ${className}Entity extends#if(${extentBaseEntity}) BaseEntity#else 
     @TableField(exist = false)
     private List<$column.attrType> $column.attrName;
 #end
+#foreach ($column in $likeInAndColumns)
+
+    /**
+     * $column.comments
+     */
+    @Column(name = "${column.columnName}", queryType = QueryType.LIKE_IN_AND)
+    @TableField(exist = false)
+    private List<$column.attrType> $column.attrName;
+#end
+#foreach ($column in $likeInOrColumns)
+
+    /**
+     * $column.comments
+     */
+    @Column(name = "${column.columnName}", queryType = QueryType.LIKE_IN_OR)
+    @TableField(exist = false)
+    private List<$column.attrType> $column.attrName;
+#end
 #foreach ($column in $betweenColumns)
 
     /**
