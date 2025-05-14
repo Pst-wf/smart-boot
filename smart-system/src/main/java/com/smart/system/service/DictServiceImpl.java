@@ -259,14 +259,17 @@ public class DictServiceImpl extends BaseServiceImpl<DictDao, DictEntity> implem
     @Override
     public String getDictName(@NotNull String dictCode, @NotNull String dictValue, String defaultValue) {
         List<DictEntity> list = getDictByCode(dictCode);
+        List<String> result = new ArrayList<>();
         if (ListUtil.isNotEmpty(list)) {
-            for (DictEntity dict : list) {
-                if (StringUtil.notBlankAndEquals(dict.getDictValue(), dictValue)) {
-                    return dict.getDictName();
-                }
+            List<DictEntity> format = TreeUtil.toList(list);
+            String[] values = dictValue.split(",");
+            for (String value : values) {
+                format.stream().filter(item -> StringUtil.notBlankAndEquals(value, item.getDictValue())).findFirst().ifPresent(first -> {
+                    result.add(first.getDictName());
+                });
             }
         }
-        return defaultValue;
+        return result.isEmpty() ? defaultValue : StringUtil.join(result, ",");
     }
 
     /**
