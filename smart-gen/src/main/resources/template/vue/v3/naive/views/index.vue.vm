@@ -23,7 +23,9 @@ import ${className}OperateModal from './modules/${vueFileName}-operate-modal.vue
 #else
 import ${className}OperateDrawer from './modules/${vueFileName}-operate-drawer.vue';
 #end
+#if($queryColumns.size() > 0)
 import ${className}Search from './modules/${vueFileName}-search.vue';
+#end
 
 const appStore = useAppStore();
 
@@ -298,6 +300,7 @@ init();
 
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
+#if($queryColumns.size() > 0)
 #if($queryDictColumns.length() > 0 )
     <${className}Search
       v-model:model="searchParams"
@@ -307,6 +310,7 @@ init();
     />
 #else
     <${className}Search v-model:model="searchParams" @reset="resetSearchParams(true)" @search="getData" />
+#end
 #end
     <NCard :title="$t('page.#if($hasMenu)${menu.routeName}.#end${classname}.title')" :bordered="false" size="small" class="sm:flex-1-hidden card-wrapper">
       <template #header-extra>

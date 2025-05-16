@@ -67,7 +67,7 @@ const { formRef, validate, restoreValidation, resetModel } = useNaiveForm();
 /**
  * 校验规则
  */
-const {#if(${hasNotNull}) defaultRequiredRule, #end#if(${hasCheckLength}) maxLengthRule#end } = useFormRules();
+const {#if(${hasNotNull}) defaultRequiredRule#if(${hasCheckLength} || ${hasCheckPresets}), #end#end#if(${hasCheckLength}) maxLengthRule#if(${hasCheckPresets}), #end#end#if(${hasCheckPresets}) patternRules#end } = useFormRules();
 
 #end
 /**
@@ -81,6 +81,9 @@ const title = computed(() => {
   };
   return titles[props.operateType];
 });
+
+/** 只读 */
+const disabled = computed(() => props.operateType === 'view');
 
 /**
  * 模型类型
@@ -118,14 +121,18 @@ function createDefaultModel(): Model {
 /**
  * 表单校验字段的key
  */
+#if($unValidateColumns.size() == 0)
+type RuleKey = keyof Model;
+#else
 type RuleKey = Exclude<keyof Model, #foreach ($column in $unValidateColumns) '${column.attrName}'#if($foreach.hasNext) | #end#end#if($uploadColumns.size() > 0 && $unValidateColumns.size() > 0) | #end#foreach($uploadColumn in $uploadColumns)'${uploadColumn.attrName}'#if($foreach.hasNext) | #end#end>;
+#end
 
 /**
  * 表单校验规则
  */
 const rules: Record<RuleKey, App.Global.FormRule | App.Global.FormRule[]> = #if($validateColumns.size() == 0){}#else{
 #foreach ($column in $validateColumns)
-  ${column.attrName}: [#if($column.isNotNull == "1")defaultRequiredRule#if($column.isCheckLength), #end#end#if($column.isCheckLength)maxLengthRule(${column.columnLength})#end]#if($foreach.hasNext),
+  ${column.attrName}: [#if($column.isNotNull == "1")defaultRequiredRule#if($column.isCheckLength || $column.validation), #end#end#if($column.isCheckLength)maxLengthRule(${column.columnLength})#if($column.validation), #end#end#if($column.validation)patternRules.$column.validation#end]#if($foreach.hasNext),
 #else
 
 #end
@@ -199,7 +206,7 @@ async function handleSubmit() {
  * @param ids 文件列表IDS
  */
 function fileChange<KEY extends keyof Model>(column: KEY, ids: string[]) {
-  if (typeof model[column] === 'string') {
+  if (model[column] === null || typeof model[column] === 'string') {
     model[column] = ids.join(',') as Model[KEY];
   }
 }
@@ -224,7 +231,7 @@ watch(visible, () => {
 <template>
   <NDrawer v-model:show="visible" display-directive="show" width="60%">
     <NDrawerContent :title="title" :native-scrollbar="false" closable>
-      <NForm ref="formRef" :model="model" :rules="rules" label-placement="left" :label-width="100">
+      <NForm ref="formRef" :model="model" :rules="rules" label-placement="left" :label-width="100" :disabled="disabled">
         <NGrid responsive="screen" item-responsive>
 #foreach ($column in $formColumns)
 #set($label = "$t('page.#if($hasMenu)${menu.routeName}.#end${classname}.${column.attrName}')")
@@ -304,6 +311,7 @@ watch(visible, () => {
 #elseif($column.components == "CHECKBOX")
              <SmartCheckbox
                 v-model:value="model.${column.attrName}"
+                :disabled="disabled"
 #if($column.dictCode)
                 :options="props.dictMap.${column.dictCode}"
                 :field-name="{ key: 'id', value: 'dictValue', label: 'dictName' }"
@@ -346,12 +354,17 @@ watch(visible, () => {
 #if($uploadColumn.columnName == $column.columnName)
              <FileUpload
                :file-data="model.${uploadColumn.attrName}"
+               :disabled="disabled"
                @file-change="(ids) => fileChange('${column.attrName}', ids)"
              />
 #end
 #end
 #elseif($column.components == "IMAGE-UPLOAD")
-             <ImageUpload v-model:file-urls="model.${column.attrName}"/>
+             <ImageUpload
+               v-model:file-urls="model.${column.attrName}"
+               :tips="{ content: '请上传 1920 x 1080 大小的图片' }"
+               :disabled="disabled"
+             />
 #elseif($column.components == "EDITOR")
              <AiEditor v-model:content="model.${column.attrName}" />
 #end

@@ -42,6 +42,7 @@ const local: App.I18n.Schema = {
 #else
     ${classname}: {
       add${className}: '新增${comments}',
+      view${className}: '${comments}详情',
       edit${className}: '修改${comments}',
       title: '${comments}列表',
 #foreach($column in $i18n)

@@ -42,6 +42,7 @@ const local: App.I18n.Schema = {
 #else
     ${classname}: {
       add${className}: 'Add ${className}',
+      view${className}: '${className} Detail',
       edit${className}: 'Edit ${className}',
       title: '${className} Table',
 #foreach($column in $i18n)

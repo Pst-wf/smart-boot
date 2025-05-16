@@ -65,40 +65,52 @@ public class Result implements Serializable {
      * @return String
      */
     public static String data(Object data) {
-        return data(data, true);
+        return data(data, true, 0, null);
     }
 
     /**
-     * 成功带参数
+     * 成功带参数 (是否校验当前页数超过总页数)
+     *
+     * @param data         返回数据
+     * @param checkCurrent 是否校验当前页数超过总页数
+     * @return String
+     */
+    public static String data(Object data, int checkCurrent) {
+        return data(data, true, checkCurrent, null);
+    }
+
+    /**
+     * 成功带参数 (过滤器)
      *
      * @param data       返回数据
      * @param filterList 过滤器
      * @return String
      */
     public static String data(Object data, List<SerializeFilter> filterList) {
-        return data(data, true, filterList);
+        return data(data, true, 0, filterList);
     }
 
     /**
-     * 成功带参数
+     * 成功带参数 (是否处理创建人信息数据)
      *
      * @param data           返回数据
      * @param isIdentityInfo 是否处理创建人信息数据
      * @return String
      */
     public static String data(Object data, boolean isIdentityInfo) {
-        return data(data, isIdentityInfo, null);
+        return data(data, isIdentityInfo, 0, null);
     }
 
     /**
      * 成功带参数
      *
-     * @param data           返回数据
-     * @param isIdentityInfo 是否处理创建人信息数据
-     * @param filterList     过滤器
+     * @param data               返回数据
+     * @param isIdentityInfo     是否处理创建人信息数据
+     * @param checkCurrentStatus 是否校验当前页数超过总页数
+     * @param filterList         过滤器
      * @return String
      */
-    public static String data(Object data, boolean isIdentityInfo, List<SerializeFilter> filterList) {
+    public static String data(Object data, boolean isIdentityInfo, int checkCurrentStatus, List<SerializeFilter> filterList) {
         if (filterList == null) {
             filterList = new ArrayList<>(0);
         }
@@ -111,7 +123,7 @@ public class Result implements Serializable {
             if (data.getClass() == Page.class) {
                 Integer current = ((Page<?>) data).getPageNum();
                 if (!((Page<?>) data).getResult().isEmpty()) {
-                    Map<String, Object> map = checkCurrent(((Page<?>) data).getPages());
+                    Map<String, Object> map = checkCurrent(((Page<?>) data).getPages(), checkCurrentStatus);
                     boolean checkCurrent = (boolean) map.get("result");
                     current = map.get("current") == null ? current : (Integer) map.get("current");
                     if (checkCurrent) {
@@ -137,7 +149,7 @@ public class Result implements Serializable {
             } else if (data.getClass() == PageInfo.class) {
                 Integer current = ((PageInfo<?>) data).getPageNum();
                 if (!((PageInfo<?>) data).getList().isEmpty()) {
-                    Map<String, Object> map = checkCurrent(((PageInfo<?>) data).getPages());
+                    Map<String, Object> map = checkCurrent(((PageInfo<?>) data).getPages(), checkCurrentStatus);
                     boolean checkCurrent = (boolean) map.get("result");
                     current = map.get("current") == null ? current : (Integer) map.get("current");
                     if (checkCurrent) {
@@ -290,24 +302,27 @@ public class Result implements Serializable {
     /**
      * 校验页数是否超过总页数
      *
-     * @param pages 总页数
+     * @param pages              总页数
+     * @param checkCurrentStatus 是否校验当前页数超过总页数
      * @return boolean
      */
-    private static Map<String, Object> checkCurrent(int pages) {
+    private static Map<String, Object> checkCurrent(int pages, int checkCurrentStatus) {
         Map<String, Object> res = new HashMap<>(0);
         boolean check = true;
-        // 获取入参页数
-        HttpServletRequest request = AuthUtil.getRequest();
-        if (request != null) {
-            // 从request中获取current
-            String query = request.getQueryString();
-            if (StringUtil.isNotBlank(query)) {
-                List<String> queries = Arrays.asList(query.split("&"));
-                String currentParam = queries.stream().filter(item -> item.contains("current=")).findFirst().orElse(null);
-                if (StringUtil.isNotBlank(currentParam)) {
-                    String current = currentParam.replace("current=", "");
-                    check = Integer.parseInt(current) <= pages;
-                    res.put("current", Integer.parseInt(current));
+        if (checkCurrentStatus == 1) {
+            // 获取入参页数
+            HttpServletRequest request = AuthUtil.getRequest();
+            if (request != null) {
+                // 从request中获取current
+                String query = request.getQueryString();
+                if (StringUtil.isNotBlank(query)) {
+                    List<String> queries = Arrays.asList(query.split("&"));
+                    String currentParam = queries.stream().filter(item -> item.contains("current=")).findFirst().orElse(null);
+                    if (StringUtil.isNotBlank(currentParam)) {
+                        String current = currentParam.replace("current=", "");
+                        check = Integer.parseInt(current) <= pages;
+                        res.put("current", Integer.parseInt(current));
+                    }
                 }
             }
         }

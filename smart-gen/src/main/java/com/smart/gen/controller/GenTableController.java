@@ -122,7 +122,7 @@ public class GenTableController {
      */
     @PostMapping("/generatorCodeInFile")
     public String generatorCodeInFile(@RequestBody GenTableEntity genTableEntity) {
-        genTableService.generatorCodeInFile(genTableEntity.getId());
+        genTableService.generatorCodeInFile(genTableEntity);
         return Result.success();
     }
 

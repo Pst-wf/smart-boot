@@ -91,6 +91,8 @@ public class FileServiceImpl extends BaseServiceImpl<FileDao, FileEntity> implem
             }
             // 获取文件名及后缀
             String name = FilenameUtils.getBaseName(fileName);
+            // 将文件名中的逗号替换
+            name = name.replace(",", "D");
             String suffix = FilenameUtils.getExtension(fileName);
 
             // 获取随机数
@@ -467,6 +469,8 @@ public class FileServiceImpl extends BaseServiceImpl<FileDao, FileEntity> implem
 
                 // 获取文件名及后缀
                 String name = FilenameUtils.getBaseName(fileEntity.getFileName());
+                // 将文件名中的逗号替换
+                name = name.replace(",", "D");
                 String suffix = FilenameUtils.getExtension(fileEntity.getFileName());
 
                 // 获取随机数

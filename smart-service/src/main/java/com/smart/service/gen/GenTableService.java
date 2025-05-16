@@ -26,9 +26,9 @@ public interface GenTableService extends BaseService<GenTableEntity> {
     /**
      * 生成代码到指定目录
      *
-     * @param id 要生成的表的ID
+     * @param entity 参数
      */
-    void generatorCodeInFile(String id);
+    void generatorCodeInFile(GenTableEntity entity);
 
     /**
      * 获取所有表信息

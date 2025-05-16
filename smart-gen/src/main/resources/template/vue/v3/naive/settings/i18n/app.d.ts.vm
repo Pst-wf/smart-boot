@@ -29,6 +29,7 @@ type Schema = {
 #else
     ${classname}: {
       add${className}: string;
+      view${className}: string;
       edit${className}: string;
       title: string;
 #foreach($column in $i18n)

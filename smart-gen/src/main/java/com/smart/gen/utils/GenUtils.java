@@ -149,6 +149,10 @@ public class GenUtils {
      * @param columns 字段List
      */
     public static void generatorCodeInFile(GenTableEntity table, List<GenTableColumnEntity> columns) {
+        // 校验frontType
+        if(StringUtil.isBlank(table.getFrontType())){
+            throw new SmartException("前端代码类型获取失败！");
+        }
         VelocityContext context = initVelocityContext(table, columns);
         //获取模板列表
         List<String> templates = getTemplates(table.getOptions(), table.getFrontType());
@@ -234,6 +238,7 @@ public class GenUtils {
         boolean hasFormDate = false;
         boolean hasNotNull = false;
         boolean hasCheckLength = false;
+        boolean hasCheckPresets = false;
         boolean extentBaseEntity = false;
         boolean hasList = false;
         boolean hasQuery = false;
@@ -322,13 +327,19 @@ public class GenUtils {
             if ("1".equals(columnEntity.getIsForm()) && !Arrays.asList(DEFAULT_COLUMNS).contains(columnEntity.getColumnName())) {
                 boolean checkLength = Arrays.asList(MAX_LENGTH_CHECK_COMPONENTS).contains(columnEntity.getComponents()) && (
                         columnEntity.getColumnLength() != null && new BigDecimal(columnEntity.getColumnLength()).compareTo(new BigDecimal(999999)) <= 0);
-                if ("1".equals(columnEntity.getIsNotNull()) || checkLength) {
+
+                boolean checkPresets = Arrays.asList(MAX_LENGTH_CHECK_COMPONENTS).contains(columnEntity.getComponents()) && StringUtil.isNotBlank(columnEntity.getValidation());
+
+                if ("1".equals(columnEntity.getIsNotNull()) || checkLength || checkPresets) {
                     if ("1".equals(columnEntity.getIsNotNull())) {
                         hasNotNull = true;
                     }
                     if (checkLength) {
                         hasCheckLength = true;
                         columnEntity.setIsCheckLength(true);
+                    }
+                    if (checkLength) {
+                        hasCheckPresets = true;
                     }
                     validateColumns.add(columnEntity);
                 } else {
@@ -555,6 +566,7 @@ public class GenUtils {
         map.put("columns", columns);
         map.put("hasNotNull", hasNotNull);
         map.put("hasCheckLength", hasCheckLength);
+        map.put("hasCheckPresets", hasCheckPresets);
         map.put("hasBigDecimal", hasBigDecimal);
         map.put("hasDate", hasDate);
         map.put("hasQueryDate", hasQueryDate);

@@ -75,15 +75,19 @@ public class GenTableServiceImpl extends BaseServiceImpl<GenTableDao, GenTableEn
     /**
      * 生成代码到指定目录
      *
-     * @param id 要生成的表的ID
+     * @param entity 参数
      */
     @Override
-    public void generatorCodeInFile(String id) {
+    public void generatorCodeInFile(GenTableEntity entity) {
+        if(StringUtil.isBlank(entity.getId()) || StringUtil.isBlank(entity.getFrontType())){
+            throw new SmartException("参数异常！");
+        }
         //查询表信息
-        GenTableEntity table = baseMapper.selectById(id);
+        GenTableEntity table = baseMapper.selectById(entity.getId());
         if (table == null) {
             throw new SmartException("表不存在");
         }
+        table.setFrontType(entity.getFrontType());
         //查询列信息
         List<GenTableColumnEntity> columns = Db.lambdaQuery(GenTableColumnEntity.class).eq(GenTableColumnEntity::getTableId, table.getId()).orderByAsc(GenTableColumnEntity::getColumnSort).list();
         if (StringUtil.isNotBlank(table.getMenuId())) {

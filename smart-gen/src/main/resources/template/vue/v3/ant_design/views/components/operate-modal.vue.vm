@@ -14,7 +14,7 @@
 #if($column.components == "INPUT")
         <a-input v-model:value="form.${column.attrName}" placeholder="请输入${column.comments}" allowClear/>
 #elseif($column.components == "TEXTAREA")
-        <a-textarea :auto-size="{ minRows: 4 }" v-model:value="form.${column.attrName}" placeholder="请输入${column.comments}"/>
+        <a-textarea :auto-size="{ minRows: 4 }" v-model:value="form.${column.attrName}" placeholder="请输入${column.comments}" allowClear show-count :maxlength="${column.columnLength}"/>
 #elseif($column.components == "INPUT-NUMBER")
         <a-input-number v-model:value="form.${column.attrName}" placeholder="请输入${column.comments}" style="width: 100%" allowClear/>
 #elseif($column.components == "SELECT")
@@ -109,13 +109,19 @@
 #elseif($column.components == "FILE-UPLOAD")
 #foreach ($uploadColumn in $uploadColumns)
 #if($uploadColumn.columnName == $column.columnName)
-        <FileUpload v-model:file-list="form.${uploadColumn.attrName}" @file-change="ids=> form.${column.attrName} = ids"/>
+        <FileUpload v-model:file-list="form.${uploadColumn.attrName}" :disabled="disabled" @file-change="ids=> form.${column.attrName} = ids"/>
 #end
 #end
 #elseif($column.components == "IMAGE-UPLOAD")
-        <ImageUpload v-model:file-list="form.${column.attrName}" />
+        <ImageUpload
+            v-model:file-list="form.${column.attrName}"
+            :show-download="!disabled"
+            :show-remove="!disabled"
+            :disabled="disabled"
+            :tips="{ content: '请上传 1920 x 1080 大小的图片' }"
+        />
 #elseif($column.components == "EDITOR")
-        <WangEditor v-model:model-value="form.${column.attrName}"/>
+        <WangEditor v-if="visible" v-model:model-value="form.${column.attrName}" :height="200" :read-only="disabled"/>
 #end
       </a-form-item>
 #end
@@ -235,10 +241,14 @@
 #foreach ($column in $validateColumns)
     ${column.attrName}: [
 #if($column.isNotNull == "1")##
-      {required: true, message: '${column.comments}不能为空'}#if($column.isCheckLength),#end
+     {required: true, message: '${column.comments}不能为空'}#if($column.isCheckLength  || $column.validation),#end
 #end
 #if($column.isCheckLength)##
-      { max: $column.columnLength, message: '长度不能超过${column.columnLength}个字符', trigger: 'blur' },
+     { max: $column.columnLength, message: '长度不能超过${column.columnLength}个字符', trigger: 'blur' }#if($column.validation),#end
+#end
+#set( $patternRules = '$patternRules' )
+#if($column.validation)
+     $patternRules('$column.validation')
 #end
     ]#if($foreach.hasNext),
 #else
@@ -291,6 +301,12 @@
       (val) => {
         if (!val) {
           formRef.value.resetFields();
+#foreach($column in $checkboxColumns)
+          ${column.attrName}CheckBox.value = [];
+#end
+#foreach($column in $cascaderDictColumns)
+          ${column.attrName}Cascader.value = [];
+#end
         }
       },
   );

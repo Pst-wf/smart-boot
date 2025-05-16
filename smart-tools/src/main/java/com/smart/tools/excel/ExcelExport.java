@@ -561,6 +561,9 @@ public class ExcelExport implements Closeable {
      * @return list 数据列表
      */
     public <E> ExcelExport setDataList(List<E> list) {
+        if(list.isEmpty()){
+            throw new SmartException("暂无数据导出!");
+        }
         String exportLength = getConfigService().getConfig("export_length");
         if (StringUtil.isNotBlank(exportLength)) {
             int length = Integer.parseInt(exportLength);
