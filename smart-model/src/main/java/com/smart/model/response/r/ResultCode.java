@@ -82,6 +82,10 @@ public enum ResultCode implements IResultCode {
      */
     USER_TYPE_ERROR(413, MessageProperties.USER_TYPE_ERROR),
     /**
+     * 获取用户信息失败
+     */
+    USER_INFO_ERROR(414, MessageProperties.USER_INFO_ERROR),
+    /**
      * 服务器异常
      */
     ERROR(500, MessageProperties.ERROR);

@@ -4,6 +4,7 @@ package com.smart.file.utils;
 import com.amazonaws.services.s3.model.S3Object;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.smart.common.constant.FileConstant;
+import com.smart.common.utils.DateUtil;
 import com.smart.common.utils.SpringUtil;
 import com.smart.common.utils.StringUtil;
 import com.smart.entity.file.FileEntity;
@@ -45,12 +46,16 @@ public class OssUtils {
      * @return Map 返回结果
      */
     public static Map<String, String> upload(String key, MultipartFile file, OssEntity oss) throws Exception {
+        // 根据年月命名文件夹
+        String dirName = "uploads/" + DateUtil.getYear() + DateUtil.getMonth() + "/";
         Map<String, String> map = new HashMap<>(0);
         if (oss != null) {
             // 拼接 "/"
             if (StringUtil.isNotBlank(oss.getOssDir())) {
                 if (!oss.getOssDir().endsWith("/")) {
-                    oss.setOssDir(oss.getOssDir() + "/");
+                    oss.setOssDir(oss.getOssDir() + "/" + dirName);
+                } else {
+                    oss.setOssDir(oss.getOssDir() + dirName);
                 }
             }
             switch (oss.getOssType()) {
@@ -59,7 +64,9 @@ public class OssUtils {
                     String bucket = oss.getBucket();
                     if (StringUtil.isNotBlank(bucket)) {
                         if (!bucket.endsWith("/")) {
-                            bucket = bucket + "/";
+                            bucket = bucket + "/" + dirName;
+                        } else {
+                            bucket = bucket + dirName;
                         }
                     }
                     map.put("key", bucket + key);

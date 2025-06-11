@@ -36,6 +36,7 @@ public class MessageProperties {
     public static String CAPTCHA_NOT_CORRECT;
     public static String USER_HAS_NO_ROLE;
     public static String USER_TYPE_ERROR;
+    public static String USER_INFO_ERROR;
 
     public void setSuccess(String success) {
         MessageProperties.SUCCESS = success;
@@ -102,5 +103,8 @@ public class MessageProperties {
     }
     public void setUserTypeError(String userTypeError) {
         USER_TYPE_ERROR = userTypeError;
+    }
+    public void setUserInfoError(String userInfoError) {
+        USER_INFO_ERROR = userInfoError;
     }
 }

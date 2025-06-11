@@ -73,7 +73,7 @@ public class SmartInterceptor implements HandlerInterceptor {
                         } else {
                             // 获取用户信息失败
                             log.error("获取PC端用户信息失败 -> {}", user.getUserId());
-                            r = Result.fail(ResultCode.ERROR);
+                            r = Result.fail(ResultCode.USER_INFO_ERROR);
                         }
                         CacheUtil.evict("user", user.getUserId());
                     }
@@ -91,7 +91,7 @@ public class SmartInterceptor implements HandlerInterceptor {
                     } else {
                         // 获取用户信息失败
                         log.error("获取App端用户信息失败 -> {}", user.getUserId());
-                        r = Result.fail(ResultCode.ERROR);
+                        r = Result.fail(ResultCode.USER_INFO_ERROR);
                     }
                     CacheUtil.evict("app_user", user.getUserId());
                 } else {
